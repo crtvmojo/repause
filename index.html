@@ -1,0 +1,2250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Repause</title>
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#121212">
+<link rel="icon" href="./icons/icon-192.png">
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --bg:#0F1418;
+    --card:#171F24;
+    --card2:#1D262C;
+    --tx:#EAF2F2;
+    --tx2:#8CA0A6;
+    --ac:#00C8D7;
+    --ac-dim:rgba(0,200,215,0.12);
+    --amber:#E8A23A;
+    --amber-dim:rgba(232,162,58,0.12);
+    --border:#26313700;
+    --radius:16px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);
+    color:var(--tx);
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+  }
+  #up{
+    width:100%;
+    max-width:420px;
+    min-height:100vh;
+    background:var(--bg);
+    position:relative;
+    display:flex;
+    flex-direction:column;
+  }
+
+  /* Hide scrollbar tracks everywhere, scrolling still works, it just
+     doesn't show a visible bar, so it reads more like an app than a page. */
+  html,body,.list{
+    scrollbar-width:none; /* Firefox */
+    -ms-overflow-style:none; /* old Edge/IE */
+  }
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar,
+  .list::-webkit-scrollbar{
+    display:none; /* Chrome, Safari, new Edge */
+  }
+
+  /* Header */
+  .hdr{
+    padding:20px 20px 14px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .logo{font-size:20px;font-weight:800;letter-spacing:-0.02em;color:var(--tx);}
+  .logo span{color:var(--ac);}
+  .pause-btn{
+    background:var(--ac);
+    color:#04222A;
+    border:none;
+    padding:9px 16px;
+    border-radius:20px;
+    font-size:13px;
+    font-weight:700;
+    cursor:pointer;
+  }
+  .hdr-actions{display:flex;align-items:center;gap:10px;}
+  .logout-btn{
+    background:transparent;
+    color:#E86B5C;
+    border:1px solid #E86B5C;
+    padding:14px;
+    border-radius:14px;
+    font-size:14px;
+    font-weight:700;
+    cursor:pointer;
+    margin-top:4px;
+  }
+  .icon-btn{
+    background:var(--card2);
+    color:var(--tx2);
+    border:1px solid #26333A;
+    width:34px;
+    height:34px;
+    border-radius:50%;
+    font-size:15px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .settings-section{
+    background:var(--card);
+    border-radius:var(--radius);
+    padding:16px;
+    margin-bottom:18px;
+  }
+  .settings-section h3{
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:0.04em;
+    color:var(--tx2);
+    text-transform:uppercase;
+    margin-bottom:14px;
+  }
+  .okbar{
+    background:rgba(0,200,215,0.12);
+    color:var(--ac);
+    font-size:12px;
+    padding:10px 14px;
+    border-radius:10px;
+    margin-bottom:12px;
+  }
+
+  /* Tabs */
+  .tabs{
+    display:flex;
+    gap:6px;
+    padding:0 20px 16px;
+  }
+  .tab{
+    flex:1;
+    text-align:center;
+    padding:9px 0;
+    border-radius:10px;
+    font-size:13px;
+    font-weight:600;
+    color:var(--tx2);
+    cursor:pointer;
+    background:transparent;
+  }
+  .tab.on{background:var(--card2);color:var(--tx);}
+
+  /* Card list */
+  .list{
+    flex:1;
+    padding:0 20px 100px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    overflow-y:auto;
+  }
+  .card{
+    background:var(--card);
+    border-radius:var(--radius);
+    padding:16px;
+    border-left:3px solid var(--ac);
+    cursor:pointer;
+  }
+  .card.stale{border-left-color:var(--amber);}
+  .card-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    margin-bottom:8px;
+  }
+  .card-title{font-size:16px;font-weight:700;color:var(--tx);}
+  .card-time{font-size:11px;color:var(--tx2);white-space:nowrap;margin-left:8px;}
+  .card-time.stale{color:var(--amber);font-weight:600;}
+  .card-next{
+    display:inline-block;
+    background:var(--ac-dim);
+    color:var(--ac);
+    font-size:12px;
+    font-weight:600;
+    padding:5px 10px;
+    border-radius:8px;
+    margin-top:4px;
+  }
+  .card-arrow{
+    text-align:right;
+    font-size:12px;
+    color:var(--ac);
+    font-weight:700;
+    margin-top:10px;
+  }
+  .empty{
+    text-align:center;
+    color:var(--tx2);
+    font-size:14px;
+    padding:60px 20px;
+  }
+  .loading{
+    text-align:center;
+    color:var(--tx2);
+    font-size:14px;
+    padding:60px 20px;
+  }
+  .errbar{
+    background:rgba(232,107,92,0.12);
+    color:#E86B5C;
+    font-size:12px;
+    padding:10px 14px;
+    border-radius:10px;
+    margin:0 20px 12px;
+  }
+  .greet{
+    padding:0 20px 28px;
+    font-size:15px;
+    font-weight:600;
+    color:var(--tx);
+    line-height:1.4;
+  }
+  .greet span{color:var(--ac);}
+
+  /* Greeting speech bubble */
+  .greet-wrap{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    margin-top:14px;
+    padding:0 20px 28px;
+  }
+  .greet-avatar{
+    width:42px;
+    height:42px;
+    border-radius:13px;
+    overflow:hidden;
+    flex-shrink:0;
+    background:var(--card2);
+    border:1px solid #26333A;
+  }
+  .greet-avatar img{width:100%;height:100%;object-fit:cover;display:block;}
+  .greet-bubble{
+    position:relative;
+    background:var(--card);
+    border-radius:14px;
+    padding:12px 14px;
+    font-size:15px;
+    font-weight:600;
+    color:var(--tx);
+    line-height:1.4;
+    margin-top:4px;
+  }
+  .greet-bubble:before{
+    content:'';
+    position:absolute;
+    left:-6px;
+    top:16px;
+    width:0;
+    height:0;
+    border-top:6px solid transparent;
+    border-bottom:6px solid transparent;
+    border-right:6px solid var(--card);
+  }
+  .greet-bubble span{color:var(--ac);}
+
+  /* Pause / Resume screens */
+  .screen{padding:20px 20px 110px;}
+  .back-btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    background:var(--card2);
+    border:1px solid #26333A;
+    color:var(--tx);
+    font-size:13px;
+    font-weight:700;
+    padding:9px 20px;
+    border-radius:20px;
+    cursor:pointer;
+    margin-bottom:20px;
+  }
+  .back-arrow{
+    width:0;
+    height:0;
+    border-top:5px solid transparent;
+    border-bottom:5px solid transparent;
+    border-right:7px solid var(--ac);
+  }
+  .field{margin-bottom:18px;}
+  .flabel{
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:0.04em;
+    color:var(--ac);
+    text-transform:uppercase;
+    margin-bottom:8px;
+  }
+  input.finput,textarea.finput{
+    width:100%;
+    background:var(--card);
+    border:1px solid #26333A;
+    color:var(--tx);
+    border-radius:12px;
+    padding:12px 14px;
+    font-size:14px;
+    font-family:inherit;
+    resize:none;
+  }
+  input.finput:focus,textarea.finput:focus{outline:none;border-color:var(--ac);}
+  .bsv{
+    width:100%;
+    background:var(--ac);
+    color:#04222A;
+    border:none;
+    padding:14px;
+    border-radius:14px;
+    font-size:15px;
+    font-weight:700;
+    cursor:pointer;
+    margin-top:8px;
+  }
+  .bsv.off{background:#2A3439;color:#5C6B70;cursor:not-allowed;}
+
+  /* Resume screen */
+  .rtitle{font-size:22px;font-weight:800;margin-bottom:4px;}
+  .rtime{font-size:12px;color:var(--tx2);margin-bottom:22px;}
+  .sec{margin-bottom:18px;}
+  .slb{
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:0.04em;
+    color:var(--tx2);
+    text-transform:uppercase;
+    margin-bottom:6px;
+  }
+  .scd{
+    background:var(--card);
+    border-radius:12px;
+    padding:14px;
+    font-size:14px;
+    line-height:1.6;
+    white-space:pre-wrap;
+  }
+  .scd.ac{background:var(--ac-dim);color:var(--ac);font-weight:600;}
+  .brs{
+    width:100%;
+    background:var(--ac);
+    color:#04222A;
+    border:none;
+    padding:14px;
+    border-radius:14px;
+    font-size:15px;
+    font-weight:700;
+    cursor:pointer;
+    margin-top:8px;
+  }
+  .brow{
+    display:flex;
+    gap:10px;
+    margin-top:8px;
+  }
+  .bsec{
+    flex:1;
+    background:var(--card2);
+    color:var(--tx);
+    border:1px solid #2A3439;
+    padding:12px;
+    border-radius:14px;
+    font-size:14px;
+    font-weight:700;
+    cursor:pointer;
+  }
+  .bsec.danger{color:#E86B5C;}
+  .bsec.warn{color:var(--amber);}
+
+  /* Success */
+  .suc{
+    height:70vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+  }
+  .sic{
+    width:64px;height:64px;
+    background:var(--ac-dim);
+    color:var(--ac);
+    border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-size:28px;
+    margin-bottom:6px;
+  }
+
+  /* Floating action button (visible on home) */
+  .fab{
+    position:fixed;
+    bottom:26px;
+    left:50%;
+    transform:translateX(calc(-50% + 0px));
+    max-width:420px;
+    width:calc(100% - 40px);
+    margin:0 20px;
+  }
+
+  /* Sticky bottom nav */
+  .bottomnav{
+    position:fixed;
+    bottom:0;
+    left:50%;
+    transform:translateX(-50%);
+    width:100%;
+    max-width:420px;
+    background:var(--card);
+    border-top:1px solid #26333A;
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-around;
+    padding:10px 20px calc(10px + env(safe-area-inset-bottom, 0px));
+    z-index:20;
+  }
+  .nav-item{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:4px;
+    cursor:pointer;
+    color:var(--tx2);
+    font-size:11px;
+    font-weight:600;
+    flex:1;
+    background:none;
+    border:none;
+  }
+  .nav-item .nav-icon{
+    width:34px;height:34px;
+    border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-size:16px;
+    background:var(--card2);
+    border:1px solid #26333A;
+    color:var(--tx2);
+  }
+  .nav-item.on{color:var(--ac);}
+  .nav-item.on .nav-icon{background:var(--ac-dim);color:var(--ac);border-color:transparent;}
+  .nav-pause{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:4px;
+    cursor:pointer;
+    margin-top:-30px;
+    background:none;
+    border:none;
+    color:var(--tx2);
+    font-size:11px;
+    font-weight:700;
+    flex:1;
+  }
+  .nav-pause .nav-icon{
+    width:58px;height:58px;
+    border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-size:22px;
+    background:var(--ac);
+    color:#04222A;
+    border:4px solid var(--card);
+  }
+  .emoji-mono{filter:grayscale(1);}
+
+  /* Top bar */
+  .topbar{
+    background:var(--card);
+    border-bottom:1px solid #26333A;
+    padding:14px 20px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    margin-bottom:14px;
+  }
+  .topbar .logo{font-size:18px;}
+
+  /* Active filter chips (Space / Tag) */
+  .filter-chips-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    padding:0 20px;
+    margin-bottom:14px;
+  }
+  .filter-chip{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    background:var(--ac-dim);
+    color:var(--ac);
+    font-size:12px;
+    font-weight:700;
+    padding:7px 12px;
+    border-radius:20px;
+    cursor:pointer;
+    width:fit-content;
+  }
+  .filter-chip.tag{background:var(--card2);color:var(--tx);}
+
+  /* Tag chips shown on cards / detail view */
+  .tag-chip{
+    display:inline-block;
+    background:var(--card2);
+    color:var(--tx2);
+    font-size:11px;
+    font-weight:600;
+    padding:4px 9px;
+    border-radius:10px;
+    margin:6px 6px 0 0;
+    cursor:pointer;
+  }
+
+  /* Projects screen */
+  .proj-add{
+    display:flex;
+    gap:8px;
+    margin-bottom:20px;
+  }
+  .proj-add input{flex:1;}
+  .proj-add button{
+    background:var(--ac);
+    color:#04222A;
+    border:none;
+    padding:0 18px;
+    border-radius:12px;
+    font-size:14px;
+    font-weight:700;
+    cursor:pointer;
+  }
+  .proj-row{
+    background:var(--card);
+    border-radius:var(--radius);
+    padding:14px 16px;
+    margin-bottom:10px;
+  }
+  .proj-top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+  }
+  .proj-name{
+    font-size:15px;
+    font-weight:700;
+    color:var(--tx);
+    cursor:pointer;
+    flex:1;
+  }
+  .proj-count{
+    font-size:12px;
+    color:var(--tx2);
+    font-weight:600;
+    margin-right:6px;
+    white-space:nowrap;
+  }
+  .proj-actions{display:flex;gap:6px;}
+  .proj-icon-btn{
+    background:var(--card2);
+    color:var(--tx2);
+    border:1px solid #26333A;
+    width:30px;
+    height:30px;
+    border-radius:50%;
+    font-size:13px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .proj-icon-btn.danger{color:#E86B5C;}
+  .proj-icon-btn.off{opacity:0.35;cursor:not-allowed;}
+  .proj-edit-row{
+    display:flex;
+    gap:8px;
+    margin-top:12px;
+  }
+  .proj-edit-row input,.proj-edit-row select{
+    flex:1;
+    background:var(--card2);
+    border:1px solid #26333A;
+    color:var(--tx);
+    border-radius:10px;
+    padding:9px 10px;
+    font-size:13px;
+    font-family:inherit;
+  }
+  .proj-edit-row button{
+    background:var(--ac);
+    color:#04222A;
+    border:none;
+    padding:0 14px;
+    border-radius:10px;
+    font-size:12px;
+    font-weight:700;
+    cursor:pointer;
+  }
+  .proj-edit-row .cancel{
+    background:var(--card2);
+    color:var(--tx2);
+    border:1px solid #26333A;
+  }
+  .proj-hint{font-size:11px;color:var(--tx2);margin-top:8px;}
+
+  /* FAQ screen */
+  .faq-section{margin-bottom:22px;}
+  .faq-section h4{
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:0.04em;
+    color:var(--ac);
+    text-transform:uppercase;
+    margin-bottom:14px;
+  }
+  .faq-item{margin-bottom:10px;}
+  .faq-item:last-child{margin-bottom:0;}
+  .faq-q{
+    font-size:14px;
+    font-weight:700;
+    color:var(--tx);
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:13px 14px;
+    background:var(--card);
+    border-radius:12px;
+  }
+  .faq-chev{color:var(--ac);font-weight:800;font-size:16px;flex-shrink:0;}
+  .faq-a{font-size:13px;color:var(--tx2);line-height:1.5;padding:10px 14px 2px;}
+
+  /* Onboarding walkthrough overlay */
+  .onboard-backdrop{
+    position:fixed;
+    inset:0;
+    background:rgba(4,8,10,0.72);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:100;
+    padding:24px;
+  }
+  .onboard-card{
+    background:var(--card);
+    border-radius:20px;
+    padding:28px 24px;
+    max-width:340px;
+    width:100%;
+    text-align:center;
+  }
+  .onboard-icon{
+    width:56px;height:56px;
+    background:var(--ac-dim);
+    color:var(--ac);
+    border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-size:24px;
+    margin:0 auto 18px;
+  }
+  .onboard-title{font-size:18px;font-weight:800;margin-bottom:10px;color:var(--tx);}
+  .onboard-body{font-size:14px;color:var(--tx2);line-height:1.6;margin-bottom:22px;}
+  .onboard-dots{display:flex;justify-content:center;gap:6px;margin-bottom:20px;}
+  .onboard-dot{width:7px;height:7px;border-radius:50%;background:#2A3439;}
+  .onboard-dot.on{background:var(--ac);}
+  .onboard-skip{color:var(--tx2);font-size:13px;cursor:pointer;margin-top:14px;}
+
+  /* Undo toast */
+  .toast{
+    position:fixed;
+    bottom:96px;
+    left:50%;
+    transform:translateX(-50%);
+    width:calc(100% - 40px);
+    max-width:380px;
+    background:var(--card2);
+    border:1px solid #26333A;
+    color:var(--tx);
+    font-size:13px;
+    font-weight:600;
+    padding:12px 16px;
+    border-radius:14px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:14px;
+    z-index:30;
+    box-shadow:0 8px 24px rgba(0,0,0,0.35);
+  }
+  .toast-undo{color:var(--ac);font-weight:800;cursor:pointer;flex-shrink:0;}
+</style>
+</head>
+<body>
+<div id="up"></div>
+
+<script>
+function uid(){return Math.random().toString(36).slice(2,10);}
+function e(s){
+  return String(s||'').replace(/[&<>"']/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+function ago(d){
+  const ms=Date.now()-new Date(d).getTime();
+  const mins=Math.floor(ms/60000);
+  if(mins<1)return 'just now';
+  if(mins<60)return mins+'m ago';
+  const hrs=Math.floor(mins/60);
+  if(hrs<24)return hrs+'h ago';
+  const days=Math.floor(hrs/24);
+  return days+'d ago';
+}
+function isStale(d){
+  return (Date.now()-new Date(d).getTime())>24*60*60*1000;
+}
+
+// --- Supabase setup ---
+const SUPABASE_URL = 'https://gktykkzyhdkjivhmosqe.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdrdHlra3p5aGRraml2aG1vc3FlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ3MzI1NjksImV4cCI6MjEwMDMwODU2OX0.hKHZjVvrz61dWvNC_86LDCIyVk4l5r3t_hy0US_Friw';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// maps a DB row to the shape the UI already expects
+function rowToCtx(row){
+  return {
+    id: row.id,
+    status: row.status,
+    project: row.project,
+    doing: row.doing || '',
+    thinking: row.thinking,
+    next: row.next_step,
+    notes: row.notes || '',
+    tags: row.tags || [],
+    at: row.created_at
+  };
+}
+
+// Escapes HTML then turns any http(s)/www links in the text into tappable anchors.
+function linkify(s){
+  const escaped=e(s);
+  return escaped.replace(/((https?:\/\/|www\.)[^\s<]+)/gi,function(match){
+    let href=match;
+    if(!/^https?:\/\//i.test(href))href='https://'+href;
+    return '<a href="'+href+'" target="_blank" rel="noopener noreferrer" style="color:var(--ac);text-decoration:underline;">'+match+'</a>';
+  });
+}
+
+// CSV field escaping per the standard: quote if it contains a comma, quote, or newline.
+function csvField(v){
+  const s=String(v==null?'':v);
+  if(/[",\n]/.test(s))return '"'+s.replace(/"/g,'""')+'"';
+  return s;
+}
+
+function buildCsv(){
+  const headers=['Space','Doing','Thinking','Next Step','Notes','Tags','Status','Created At'];
+  const rows=[headers.join(',')];
+  S.ctxs.forEach(function(c){
+    rows.push([
+      csvField(c.project),
+      csvField(c.doing),
+      csvField(c.thinking),
+      csvField(c.next),
+      csvField(c.notes),
+      csvField((c.tags||[]).join('; ')),
+      csvField(c.status),
+      csvField(c.at)
+    ].join(','));
+  });
+  return rows.join('\r\n');
+}
+
+const GREETINGS = [
+  'Welcome back, {name}. What are you pausing right now?',
+  'Hey {name}, ready to jot down where you left off?',
+  'Good to see you, {name}. Anything on your mind to pause?',
+  '{name}, what\'s currently taking up space in your head?',
+  'Back again, {name}? Let\'s capture what you\'re working on.'
+];
+
+const NEW_USER_GREETINGS = [
+  'Welcome, {name}. Got something on your mind right now? Pause it here so you don\'t lose it.',
+  'Hey {name}, welcome to Repause. Whenever you get interrupted, this is where you capture it.',
+  '{name}, welcome aboard. Anything you\'re working on right now worth pausing?'
+];
+
+const ONBOARDING = [
+  {icon:'⏸',title:'Welcome to Repause',body:'Whenever something interrupts you, capture what\'s in your head here so you can pick up right where you left off.'},
+  {icon:'✎',title:'Pause anything, anytime',body:'Tap Pause, jot down a Space (what it\'s for), what\'s on your mind, and your next step. That\'s all you need.'},
+  {icon:'📁',title:'Stay organized',body:'Group related items into Spaces, and add optional Tags to find things later, "urgent," "waiting on someone," whatever helps you search.'},
+  {icon:'❓',title:'Need a hand later?',body:'Tap the FAQ icon in the bottom bar anytime for how-tos and common questions. You can also replay this walkthrough from Settings.'}
+];
+
+const SEED = [
+  {
+    project:'Website redesign for client',
+    doing:'Reworking the homepage layout and swapping out the old banner images',
+    thinking:'The client wants the pricing section higher up on the page, but I still need to double check how that looks on mobile before finalizing.',
+    next_step:'Adjust mobile layout, then send a preview link for feedback',
+    status:'active'
+  },
+  {
+    project:'Monthly budget spreadsheet',
+    doing:'Updating this month\'s expenses and comparing against last month',
+    thinking:'Noticed the subscription costs went up again. Want to list out which ones are actually being used before deciding what to cancel.',
+    next_step:'List all active subscriptions, then flag ones to cancel',
+    status:'active'
+  },
+  {
+    project:'Book I\'m reading',
+    doing:'Reading chapter 6, right after the main character makes a big decision',
+    thinking:'Curious how this choice affects the next few chapters. Want to remember the key details before picking it back up.',
+    next_step:'Continue from chapter 6, re-read the last page first',
+    status:'active'
+  }
+];
+
+const FAQ=[
+  {
+    section:'Getting started',
+    items:[
+      {q:'What is Repause?',a:'A place to save the context of what you\'re working on right before you get interrupted, so you can pick it back up later without losing your train of thought.'},
+      {q:'How do I save something?',a:'Tap "Pause" at the bottom, fill in the Space, what\'s in your head, and your next step, then save.'},
+      {q:'Which fields are required?',a:'Space, what\'s in your head, and your next step. "What you\'re doing," Notes, and Tags are all optional.'},
+      {q:'Can I add a note or link when pausing something?',a:'Yes, there\'s an optional Notes field. If you paste a web link in there, it becomes tappable when you view the item later.'}
+    ]
+  },
+  {
+    section:'Using it day to day',
+    items:[
+      {q:'What\'s the difference between Paused, Resumed, and Done?',a:'Paused is anything you\'ve saved and haven\'t touched since. Resumed means you\'ve picked it back up (tap "Mark as resumed" on a Paused item). Done means you\'re finished with it entirely.'},
+      {q:'What does the amber warning badge mean?',a:'A Paused item is flagged once it\'s been sitting untouched for over 24 hours, just a nudge that it might be going stale.'},
+      {q:'I marked something Done by mistake. Can I get it back?',a:'Yes, open it from the Done tab and tap "Repause this item."'}
+    ]
+  },
+  {
+    section:'Spaces',
+    items:[
+      {q:'What are Spaces?',a:'A way to group related pause items together, work or personal, a client, a household errand list, whatever you like. Typing a new space name when you pause something automatically adds it to your Spaces list.'},
+      {q:'Can I rename or merge Spaces?',a:'Yes, from Settings, under Spaces, tap the pencil icon to rename, or the merge icon to fold one Space into another.'},
+      {q:'Why can\'t I delete a Space?',a:'Only Spaces with zero items left under them can be deleted, so you don\'t lose work by accident. Merge it into another Space first.'}
+    ]
+  },
+  {
+    section:'Tags',
+    items:[
+      {q:'What are Tags, and how are they different from Spaces?',a:'A Space is the one bucket a paused item belongs to. Tags are optional extra labels you can layer on top, as many as you like, for things that cut across Spaces, like "urgent" or "waiting on someone."'},
+      {q:'How do I add tags?',a:'On the Pause form, type one or more words into the Tags field, separated by commas. It\'s optional.'},
+      {q:'Can I rename, merge, or remove a tag?',a:'Yes, from Settings, under Tags. Removing a tag just strips that label from whatever had it, the items themselves are untouched.'}
+    ]
+  },
+  {
+    section:'Account & data',
+    items:[
+      {q:'Is my data private?',a:'Yes, everything is tied to your account and only visible to you.'},
+      {q:'Can I use Repause on more than one device?',a:'Yes, log in with the same account anywhere and your Paused/Resumed/Done items stay in sync.'},
+      {q:'Can I install this like an app?',a:'Yes, most phones let you "Add to Home Screen" from the browser menu for a full-screen, app-like experience.'}
+    ]
+  },
+  {
+    section:'Backups & restore',
+    items:[
+      {q:'Do I need to back up my data?',a:'Not really. Everything is already stored online and shows up the moment you log in on any device, a backup is more of an extra safety net or a personal copy, not something you need for normal use.'},
+      {q:'What\'s the difference between the JSON and CSV download?',a:'JSON is the one to keep for backups, it\'s the format Restore understands. CSV opens directly in a spreadsheet app like Excel, Google Sheets, or Numbers so you can browse or share it, but it can\'t be restored back into Repause.'},
+      {q:'When would I actually use Restore?',a:'Mainly two situations: you accidentally deleted something forever and want it back, or you\'re bringing old items into a different account. Restore always adds items back in as new entries, it never deletes or overwrites what\'s already there.'},
+      {q:'Will restoring the same backup twice cause duplicates?',a:'Yes. Restore doesn\'t check for existing items, it just adds whatever is in the file, so only restore a given backup once unless you want duplicates.'},
+      {q:'Where do I find Export and Restore?',a:'Both live in Settings, below the Tags section.'}
+    ]
+  }
+];
+
+const S={
+  view:'auth',
+  tab:'active',
+  sel:null,
+  editId:null,
+  form:{project:'',doing:'',thinking:'',next:'',notes:'',tags:''},
+  ctxs:[],
+  loading:true,
+  saving:false,
+  error:null,
+  session:null,
+  authMode:'login',
+  authForm:{email:'',password:''},
+  authError:null,
+  authBusy:false,
+  resetForm:{email:''},
+  resetError:null,
+  resetSuccess:null,
+  resetBusy:false,
+  resetPassForm:{newPassword:'',confirmPassword:''},
+  resetPassError:null,
+  resetPassBusy:false,
+  profile:{handle:''},
+  greeting:null,
+  isNewUser:false,
+  settingsForm:{handle:'',newPassword:'',confirmPassword:''},
+  handleError:null,
+  handleSuccess:null,
+  handleBusy:false,
+  passError:null,
+  passSuccess:null,
+  passBusy:false,
+  projects:[],
+  projectsLoaded:false,
+  projectFilter:null,
+  newProjectName:'',
+  projectAddError:null,
+  projectEditId:null,
+  projectEditName:'',
+  projectMergeId:null,
+  projectError:null,
+  projectBusy:false,
+  tagFilter:null,
+  tagEditName:null,
+  tagEditNewName:'',
+  tagMergeName:null,
+  tagError:null,
+  tagBusy:false,
+  searchOpen:false,
+  searchQuery:'',
+  importBusy:false,
+  importError:null,
+  importSuccess:null,
+  onboardingOpen:false,
+  onboardingStep:0,
+  faqOpen:{},
+  toast:null
+};
+
+let toastTimer=null;
+function showToast(message,contextId,previousStatus){
+  if(toastTimer)clearTimeout(toastTimer);
+  S.toast={message:message,contextId:contextId,previousStatus:previousStatus};
+  draw();
+  toastTimer=setTimeout(function(){
+    S.toast=null;
+    draw();
+  },5000);
+}
+
+let contextsLoadInProgress=false;
+async function loadContexts(){
+  if(contextsLoadInProgress)return;
+  contextsLoadInProgress=true;
+  S.loading=true;S.error=null;draw();
+  try{
+    // Try to atomically claim the "first load" slot for this user.
+    // The seed_status table's user_id is a primary key, so only one
+    // concurrent attempt can ever succeed here, no matter how many
+    // page loads or tabs race to get here at the same time.
+    const {error:claimErr}=await sb.from('seed_status').insert({user_id:S.session.user.id});
+    S.isNewUser=!claimErr;
+    if(!claimErr){
+      const seedRows=SEED.map(function(s){return Object.assign({user_id:S.session.user.id},s);});
+      const {error:seedErr}=await sb.from('contexts').insert(seedRows);
+      if(seedErr)throw seedErr;
+    }
+    const {data,error}=await sb.from('contexts').select('*').order('created_at',{ascending:false});
+    if(error)throw error;
+    S.ctxs=data.map(rowToCtx);
+  }catch(err){
+    console.error('Load failed:',err);
+    S.error='Could not load your contexts. Check your connection and refresh.';
+  }
+  S.loading=false;contextsLoadInProgress=false;draw();
+}
+
+async function loadProfile(){
+  try{
+    const {data,error}=await sb.from('profiles').select('handle').eq('id',S.session.user.id).maybeSingle();
+    if(error)throw error;
+    S.profile.handle=data?data.handle:'';
+    S.settingsForm.handle=S.profile.handle;
+  }catch(err){
+    console.error('Load profile failed:',err);
+  }
+}
+
+function norm(s){return String(s||'').trim().toLowerCase();}
+
+// Parses the comma-separated Tags input into a clean, deduped array.
+function parseTags(raw){
+  const seen={};
+  const out=[];
+  String(raw||'').split(',').forEach(function(t){
+    const trimmed=t.trim();
+    if(!trimmed)return;
+    const n=norm(trimmed);
+    if(seen[n])return;
+    seen[n]=true;
+    out.push(trimmed);
+  });
+  return out;
+}
+
+// Derives the distinct list of tags currently in use, from loaded contexts.
+// No separate tags table, tags are lightweight and just live on each context.
+function allTags(){
+  const seen={};
+  const out=[];
+  S.ctxs.forEach(function(c){
+    (c.tags||[]).forEach(function(t){
+      const n=norm(t);
+      if(!n||seen[n])return;
+      seen[n]=true;
+      out.push(t);
+    });
+  });
+  out.sort(function(a,b){return a.localeCompare(b);});
+  return out;
+}
+
+function tagCount(name){
+  const n=norm(name);
+  return S.ctxs.filter(function(c){return (c.tags||[]).some(function(t){return norm(t)===n;});}).length;
+}
+
+// Replaces oldName with newName across every context's tags array (deduping
+// in case newName is already present), and persists each affected row.
+// Used for both rename (newName didn't exist before) and merge (it did).
+async function renameOrMergeTag(oldName,newName){
+  const targets=S.ctxs.filter(function(c){return (c.tags||[]).some(function(t){return norm(t)===norm(oldName);});});
+  await Promise.all(targets.map(function(c){
+    const seen={};
+    const newTags=[];
+    (c.tags||[]).forEach(function(t){
+      const val=norm(t)===norm(oldName)?newName:t;
+      const n=norm(val);
+      if(seen[n])return;
+      seen[n]=true;
+      newTags.push(val);
+    });
+    return sb.from('contexts').update({tags:newTags}).eq('id',c.id).then(function(res){
+      if(res.error)throw res.error;
+      c.tags=newTags;
+    });
+  }));
+}
+
+// Strips a tag from every context that has it. Non-destructive to the
+// context itself, tags are optional labels, not a required field.
+async function removeTag(name){
+  const targets=S.ctxs.filter(function(c){return (c.tags||[]).some(function(t){return norm(t)===norm(name);});});
+  await Promise.all(targets.map(function(c){
+    const newTags=(c.tags||[]).filter(function(t){return norm(t)!==norm(name);});
+    return sb.from('contexts').update({tags:newTags}).eq('id',c.id).then(function(res){
+      if(res.error)throw res.error;
+      c.tags=newTags;
+    });
+  }));
+}
+
+function projectCount(name){
+  const n=norm(name);
+  return S.ctxs.filter(function(c){return norm(c.project)===n;}).length;
+}
+
+async function loadProjects(){
+  try{
+    const {data,error}=await sb.from('projects').select('*').order('name',{ascending:true});
+    if(error)throw error;
+    S.projects=data;
+    S.projectsLoaded=true;
+  }catch(err){
+    console.error('Load projects failed:',err);
+  }
+}
+
+// Makes sure a typed project name exists as a managed project row.
+// Called after every pause save so the Projects screen stays in sync
+// even when someone just types a new name instead of using "+ New Project".
+async function ensureProjectExists(name){
+  const n=norm(name);
+  if(!n)return;
+  if(S.projects.some(function(p){return norm(p.name)===n;}))return;
+  try{
+    const {data,error}=await sb.from('projects').insert({user_id:S.session.user.id,name:name.trim()}).select().single();
+    if(error)throw error;
+    S.projects.push(data);
+    S.projects.sort(function(a,b){return a.name.localeCompare(b.name);});
+  }catch(err){
+    // Duplicate (race with another tab, or case-only difference) is fine to ignore.
+    console.error('ensureProjectExists failed:',err);
+  }
+}
+
+async function init(){
+  const {data}=await sb.auth.getSession();
+  S.session=data.session;
+  if(S.session){
+    S.view='home';
+    loadProfile();
+    loadContexts();
+    loadProjects();
+  }else{
+    S.loading=false;
+    S.view='auth';
+    draw();
+  }
+}
+
+sb.auth.onAuthStateChange(function(event,session){
+  S.session=session;
+  if(event==='PASSWORD_RECOVERY'){
+    S.resetPassError=null;
+    S.resetPassForm={newPassword:'',confirmPassword:''};
+    S.view='resetPassword';
+    draw();
+    return;
+  }
+  if(event==='SIGNED_IN' && S.view==='auth'){
+    S.view='home';
+    loadProfile();
+    loadContexts();
+  }
+  if(event==='SIGNED_OUT'){
+    S.ctxs=[];
+    S.view='auth';
+    draw();
+  }
+});
+
+function draw(){
+  const el=document.getElementById('up');
+  if(S.view==='auth'){
+    const mode=S.authMode;
+    if(mode==='reset'){
+      el.innerHTML=
+        '<div class="screen" style="padding-top:70px;">'
+          +'<div class="logo" style="text-align:center;font-size:26px;margin-bottom:6px;">Re<span>pause</span></div>'
+          +'<div style="text-align:center;color:var(--tx2);font-size:13px;margin-bottom:28px;">Reset your password</div>'
+          +(S.resetError?'<div class="errbar">'+e(S.resetError)+'</div>':'')
+          +(S.resetSuccess?'<div class="okbar">'+e(S.resetSuccess)+'</div>':'')
+          +'<div class="field"><div class="flabel">Email</div><input class="finput" id="remail" type="email" placeholder="you@example.com" value="'+e(S.resetForm.email)+'"></div>'
+          +'<button class="bsv" data-a="do-reset-request">'+(S.resetBusy?'Sending…':'Send reset link')+'</button>'
+          +'<div style="text-align:center;margin-top:16px;font-size:13px;color:var(--tx2);">'
+            +'Remembered it? '
+            +'<span style="color:var(--ac);font-weight:700;cursor:pointer;" data-a="back-to-login">Log in</span>'
+          +'</div>'
+        +'</div>';
+      return;
+    }
+    el.innerHTML=
+      '<div class="screen" style="padding-top:70px;">'
+        +'<div class="logo" style="text-align:center;font-size:26px;margin-bottom:6px;">Re<span>pause</span></div>'
+        +'<div style="text-align:center;color:var(--tx2);font-size:13px;margin-bottom:28px;">Pick up right where you left off</div>'
+        +(S.authError?'<div class="errbar">'+e(S.authError)+'</div>':'')
+        +'<div class="field"><div class="flabel">Email</div><input class="finput" id="aemail" type="email" placeholder="you@example.com" value="'+e(S.authForm.email)+'"></div>'
+        +'<div class="field"><div class="flabel">Password</div><input class="finput" id="apass" type="password" placeholder="At least 6 characters" value="'+e(S.authForm.password)+'"></div>'
+        +(mode==='login'?'<div style="text-align:right;margin-top:-10px;margin-bottom:18px;"><span style="color:var(--tx2);font-size:12px;cursor:pointer;" data-a="go-forgot-password">Forgot password?</span></div>':'')
+        +'<button class="bsv" data-a="'+(mode==='login'?'do-login':'do-signup')+'">'+(S.authBusy?'Please wait…':(mode==='login'?'Log in':'Create account'))+'</button>'
+        +'<div style="text-align:center;margin-top:16px;font-size:13px;color:var(--tx2);">'
+          +(mode==='login'?'New here? ':'Already have an account? ')
+          +'<span style="color:var(--ac);font-weight:700;cursor:pointer;" data-a="switch-mode">'+(mode==='login'?'Create an account':'Log in')+'</span>'
+        +'</div>'
+      +'</div>';
+    return;
+  }
+  if(S.view==='resetPassword'){
+    el.innerHTML=
+      '<div class="screen" style="padding-top:70px;">'
+        +'<div class="logo" style="text-align:center;font-size:26px;margin-bottom:6px;">Re<span>pause</span></div>'
+        +'<div style="text-align:center;color:var(--tx2);font-size:13px;margin-bottom:28px;">Set a new password</div>'
+        +(S.resetPassError?'<div class="errbar">'+e(S.resetPassError)+'</div>':'')
+        +'<div class="field"><div class="flabel">New password</div><input class="finput" id="rpNewPass" type="password" placeholder="At least 6 characters" value="'+e(S.resetPassForm.newPassword)+'"></div>'
+        +'<div class="field"><div class="flabel">Confirm new password</div><input class="finput" id="rpConfirmPass" type="password" placeholder="Re-enter your new password" value="'+e(S.resetPassForm.confirmPassword)+'"></div>'
+        +'<button class="bsv" data-a="do-reset-password">'+(S.resetPassBusy?'Saving…':'Save new password')+'</button>'
+      +'</div>';
+    return;
+  }
+  if(S.view==='home'){
+    if(S.loading){
+      el.innerHTML=topBar()+'<div class="loading">Loading your contexts…</div>';
+      return;
+    }
+    const byFilter=function(c){
+      const spaceOk=!S.projectFilter||norm(c.project)===norm(S.projectFilter);
+      const tagOk=!S.tagFilter||(c.tags||[]).some(function(t){return norm(t)===norm(S.tagFilter);});
+      const q=norm(S.searchQuery);
+      const searchOk=!q||[c.project,c.doing,c.thinking,c.next,c.notes,(c.tags||[]).join(' ')].some(function(field){return norm(field).indexOf(q)!==-1;});
+      return spaceOk&&tagOk&&searchOk;
+    };
+    const active=S.ctxs.filter(c=>c.status==='active').filter(byFilter);
+    const done=S.ctxs.filter(c=>c.status==='done').filter(byFilter);
+    const archived=S.ctxs.filter(c=>c.status==='archived').filter(byFilter);
+    const lists={active:active,done:done,archived:archived};
+    const list=lists[S.tab];
+    const emptyMsg={
+      active:'No paused contexts yet. Hit "Pause here" to save one.',
+      done:'Nothing resumed yet.',
+      archived:'Nothing marked done yet.'
+    };
+    let cardsHtml='';
+    if(list.length===0){
+      cardsHtml='<div class="empty">'+emptyMsg[S.tab]+'</div>';
+    }else{
+      cardsHtml=list.map(function(c){
+        const stale=c.status==='active'&&isStale(c.at);
+        const arrowLabel=c.status==='active'?'Resume →':(c.status==='archived'?'View →':'Resumed ✓');
+        const tags=c.tags||[];
+        const tagsHtml=tags.length
+          ?('<div>'+tags.slice(0,3).map(function(t){return '<span class="tag-chip" data-a="tag-filter" data-name="'+e(t)+'">'+e(t)+'</span>';}).join('')
+            +(tags.length>3?'<span class="tag-chip" style="cursor:default;">+'+(tags.length-3)+'</span>':'')+'</div>')
+          :'';
+        return '<div class="card'+(stale?' stale':'')+'" data-a="view" data-id="'+c.id+'">'
+          +'<div class="card-top">'
+          +'<div class="card-title">'+e(c.project)+'</div>'
+          +'<div class="card-time'+(stale?' stale':'')+'">'+(c.notes?'<span class="emoji-mono" title="Has notes">📝</span> ':'')+(stale?'⚠ ':'')+ago(c.at)+'</div>'
+          +'</div>'
+          +'<div class="card-next">→ '+e(c.next)+'</div>'
+          +tagsHtml
+          +'<div class="card-arrow">'+arrowLabel+'</div>'
+          +'</div>';
+      }).join('');
+    }
+    const errHtml=S.error?('<div class="errbar">'+e(S.error)+'</div>'):'';
+    if(!S.greeting){
+      const name=(S.profile.handle&&S.profile.handle.trim())
+        ? S.profile.handle
+        : (S.session&&S.session.user&&S.session.user.email ? S.session.user.email.split('@')[0] : 'there');
+      const pool=S.isNewUser?NEW_USER_GREETINGS:GREETINGS;
+      const template=pool[Math.floor(Math.random()*pool.length)];
+      S.greeting=template.replace('{name}','<span>'+e(name)+'</span>');
+      if(S.isNewUser){
+        S.onboardingOpen=true;
+        S.onboardingStep=0;
+      }
+    }
+    const greetHtml='<div class="greet-wrap"><div class="greet-avatar"><img src="./icons/icon-192.png" alt="Repause"></div><div class="greet-bubble">'+S.greeting+'</div></div>';
+    const chips=[];
+    if(S.projectFilter)chips.push('<div class="filter-chip" data-a="clear-project-filter">📁 '+e(S.projectFilter)+' ✕</div>');
+    if(S.tagFilter)chips.push('<div class="filter-chip tag" data-a="clear-tag-filter">#'+e(S.tagFilter)+' ✕</div>');
+    const filterChip=chips.length?('<div class="filter-chips-row">'+chips.join('')+'</div>'):'';
+    const searchRow=S.searchOpen
+      ?('<div style="display:flex;align-items:center;gap:8px;padding:0 20px 14px;">'
+        +'<input class="finput" id="fsearch" type="search" placeholder="Search, then press Enter…" value="'+e(S.searchQuery)+'">'
+        +'<button class="icon-btn" data-a="toggle-search" title="Close search">✕</button>'
+      +'</div>')
+      :'';
+    el.innerHTML=
+      topBar(true)
+      +greetHtml
+      +filterChip
+      +searchRow
+      +errHtml
+      +'<div class="tabs">'
+        +'<div class="tab'+(S.tab==='active'?' on':'')+'" data-a="tab" data-t="active">Paused ('+active.length+')</div>'
+        +'<div class="tab'+(S.tab==='done'?' on':'')+'" data-a="tab" data-t="done">Resumed ('+done.length+')</div>'
+        +'<div class="tab'+(S.tab==='archived'?' on':'')+'" data-a="tab" data-t="archived">Done ('+archived.length+')</div>'
+      +'</div>'
+      +'<div class="list">'+cardsHtml+'</div>';
+  }
+  else if(S.view==='pause'){
+    const isEdit=!!S.editId;
+    el.innerHTML=
+      topBar()
+      +'<div class="screen">'
+        +'<button class="back-btn" data-a="go-home"><span class="back-arrow"></span>Back</button>'
+        +'<div class="field"><div class="flabel">Space</div><input class="finput" id="fp" list="projectList" placeholder="What are you working on?" value="'+e(S.form.project)+'"></div>'
+        +'<datalist id="projectList">'+S.projects.map(function(p){return '<option value="'+e(p.name)+'">';}).join('')+'</datalist>'
+        +'<div class="field"><div class="flabel">What you\'re doing (optional)</div><textarea class="finput" id="fd" rows="2" placeholder="Quick note on the task itself">'+e(S.form.doing)+'</textarea></div>'
+        +'<div class="field"><div class="flabel">What\'s in your head right now</div><textarea class="finput" id="fth" rows="3" placeholder="The context you don\'t want to lose">'+e(S.form.thinking)+'</textarea></div>'
+        +'<div class="field"><div class="flabel">First thing to do when you return</div><input class="finput" id="fn" placeholder="Your next step" value="'+e(S.form.next)+'"></div>'
+        +'<div class="field"><div class="flabel">Notes (optional)</div><textarea class="finput" id="fnotes" rows="2" placeholder="A reference note, or paste a link">'+e(S.form.notes)+'</textarea></div>'
+        +'<div class="field"><div class="flabel">Tags (optional)</div><input class="finput" id="ftags" list="tagList" placeholder="e.g. urgent, waiting on client" value="'+e(S.form.tags)+'"></div>'
+        +'<datalist id="tagList">'+allTags().map(function(t){return '<option value="'+e(t)+'">';}).join('')+'</datalist>'
+        +'<button class="bsv off" id="sbtn" data-a="save">'+(S.saving?'Saving…':(isEdit?'Save changes':'Save and pause'))+'</button>'
+      +'</div>';
+    setTimeout(updSave,0);
+  }
+  else if(S.view==='resume'){
+    const sel=S.ctxs.find(function(c){return c.id===S.sel;});
+    if(!sel){S.view='home';draw();return;}
+    const stale=sel.status==='active'&&isStale(sel.at);
+    const doingBlock=sel.doing?('<div class="sec"><div class="slb">WHAT YOU WERE DOING</div><div class="scd">'+e(sel.doing)+'</div></div>'):'';
+    const notesBlock=sel.notes?('<div class="sec"><div class="slb">NOTES</div><div class="scd">'+linkify(sel.notes)+'</div></div>'):'';
+    const tagsBlock=(sel.tags&&sel.tags.length)
+      ?('<div class="sec">'+sel.tags.map(function(t){return '<span class="tag-chip" data-a="tag-filter" data-name="'+e(t)+'">'+e(t)+'</span>';}).join('')+'</div>')
+      :'';
+
+    const statusLabel={active:(stale?'⚠ Paused ':'Paused '),done:'Resumed ',archived:'Done '};
+
+    let actions='';
+    if(sel.status==='active'){
+      actions='<button class="brs" data-a="mark">✓ Mark as resumed</button>'
+        +'<div class="brow">'
+          +'<button class="bsec" data-a="edit">✎ Edit</button>'
+          +'<button class="bsec warn" data-a="archive">✓ Done</button>'
+        +'</div>';
+    }else if(sel.status==='done'){
+      actions='<div class="brow">'
+          +'<button class="bsec" data-a="edit">✎ Edit</button>'
+          +'<button class="bsec warn" data-a="archive">✓ Done</button>'
+        +'</div>'
+        +'<div class="brow">'
+          +'<button class="bsec" data-a="reopen">↺ Repause this item</button>'
+        +'</div>';
+    }else if(sel.status==='archived'){
+      actions='<div class="brow">'
+          +'<button class="bsec" data-a="restore">↺ Repause this item</button>'
+          +'<button class="bsec danger" data-a="delete">🗑 Delete forever</button>'
+        +'</div>';
+    }
+
+    el.innerHTML=
+      topBar()
+      +'<div class="screen">'
+        +'<button class="back-btn" data-a="go-home"><span class="back-arrow"></span>Back</button>'
+        +'<div class="rtitle">'+e(sel.project)+'</div>'
+        +'<div class="rtime">'+statusLabel[sel.status]+ago(sel.at)+'</div>'
+        +tagsBlock
+        +doingBlock
+        +'<div class="sec"><div class="slb">WHAT WAS IN YOUR HEAD</div><div class="scd" style="font-style:italic">"'+e(sel.thinking)+'"</div></div>'
+        +'<div class="sec"><div class="slb">YOUR NEXT STEP</div><div class="scd ac">'+e(sel.next)+'</div></div>'
+        +notesBlock
+        +actions
+      +'</div>';
+  }
+  else if(S.view==='settings'){
+    const sortedProjects=S.projects.slice().sort(function(a,b){return a.name.localeCompare(b.name);});
+    const spaceRows=sortedProjects.map(function(p){
+      const count=projectCount(p.name);
+      const isEditing=S.projectEditId===p.id;
+      const isMerging=S.projectMergeId===p.id;
+      let extra='';
+      if(isEditing){
+        extra='<div class="proj-edit-row">'
+          +'<input id="peName" value="'+e(S.projectEditName)+'" placeholder="Space name">'
+          +'<button data-a="proj-edit-save" data-id="'+p.id+'">Save</button>'
+          +'<button class="cancel" data-a="proj-edit-cancel">Cancel</button>'
+        +'</div>';
+      }
+      if(isMerging){
+        const others=sortedProjects.filter(function(o){return o.id!==p.id;});
+        if(others.length===0){
+          extra+='<div class="proj-hint">No other Spaces to merge into yet.</div>';
+        }else{
+          extra+='<div class="proj-edit-row">'
+            +'<select id="mergeTarget">'
+              +others.map(function(o){return '<option value="'+e(o.name)+'">'+e(o.name)+'</option>';}).join('')
+            +'</select>'
+            +'<button data-a="proj-merge-confirm" data-id="'+p.id+'">Merge</button>'
+            +'<button class="cancel" data-a="proj-merge-cancel">Cancel</button>'
+          +'</div>'
+          +'<div class="proj-hint">All '+count+' task(s) in "'+e(p.name)+'" will move to the Space you pick, and this Space will be removed.</div>';
+        }
+      }
+      const canDelete=count===0;
+      return '<div class="proj-row">'
+        +'<div class="proj-top">'
+          +'<div class="proj-name" style="cursor:default;">'+e(p.name)+'</div>'
+          +'<div class="proj-count">'+count+'</div>'
+          +'<div class="proj-actions">'
+            +'<button class="proj-icon-btn" data-a="proj-edit-start" data-id="'+p.id+'" title="Rename">✎</button>'
+            +'<button class="proj-icon-btn" data-a="proj-merge-start" data-id="'+p.id+'" title="Merge into…">🔀</button>'
+            +'<button class="proj-icon-btn'+(canDelete?'':' off')+'" data-a="proj-delete" data-id="'+p.id+'" title="'+(canDelete?'Delete':'Merge or reassign tasks first')+'">🗑</button>'
+          +'</div>'
+        +'</div>'
+        +extra
+      +'</div>';
+    }).join('');
+    const spaceEmptyHtml=sortedProjects.length===0?'<div class="proj-hint">No Spaces yet.</div>':'';
+
+    const tagListS=allTags();
+    const tagRowsS=tagListS.map(function(name){
+      const count=tagCount(name);
+      const isEditing=S.tagEditName===name;
+      const isMerging=S.tagMergeName===name;
+      let extra='';
+      if(isEditing){
+        extra='<div class="proj-edit-row">'
+          +'<input id="teName" value="'+e(S.tagEditNewName)+'" placeholder="Tag name">'
+          +'<button data-a="tag-edit-save" data-name="'+e(name)+'">Save</button>'
+          +'<button class="cancel" data-a="tag-edit-cancel">Cancel</button>'
+        +'</div>';
+      }
+      if(isMerging){
+        const others=tagListS.filter(function(o){return norm(o)!==norm(name);});
+        if(others.length===0){
+          extra+='<div class="proj-hint">No other tags to merge into yet.</div>';
+        }else{
+          extra+='<div class="proj-edit-row">'
+            +'<select id="tagMergeTarget">'
+              +others.map(function(o){return '<option value="'+e(o)+'">'+e(o)+'</option>';}).join('')
+            +'</select>'
+            +'<button data-a="tag-merge-confirm" data-name="'+e(name)+'">Merge</button>'
+            +'<button class="cancel" data-a="tag-merge-cancel">Cancel</button>'
+          +'</div>'
+          +'<div class="proj-hint">All '+count+' task(s) tagged "'+e(name)+'" will be re-tagged with the one you pick.</div>';
+        }
+      }
+      return '<div class="proj-row">'
+        +'<div class="proj-top">'
+          +'<div class="proj-name" style="cursor:default;">#'+e(name)+'</div>'
+          +'<div class="proj-count">'+count+'</div>'
+          +'<div class="proj-actions">'
+            +'<button class="proj-icon-btn" data-a="tag-edit-start" data-name="'+e(name)+'" title="Rename">✎</button>'
+            +'<button class="proj-icon-btn" data-a="tag-merge-start" data-name="'+e(name)+'" title="Merge into…">🔀</button>'
+            +'<button class="proj-icon-btn" data-a="tag-delete" data-name="'+e(name)+'" title="Remove">🗑</button>'
+          +'</div>'
+        +'</div>'
+        +extra
+      +'</div>';
+    }).join('');
+    const tagEmptyHtmlS=tagListS.length===0?'<div class="proj-hint">No tags yet.</div>':'';
+
+    el.innerHTML=
+      topBar()
+      +'<div class="screen">'
+        +'<button class="back-btn" data-a="go-home"><span class="back-arrow"></span>Back</button>'
+        +'<div class="rtitle" style="margin-bottom:20px;">Settings</div>'
+
+        +'<div class="settings-section">'
+          +'<h3>Your handle</h3>'
+          +(S.handleError?'<div class="errbar">'+e(S.handleError)+'</div>':'')
+          +(S.handleSuccess?'<div class="okbar">'+e(S.handleSuccess)+'</div>':'')
+          +'<div class="field" style="margin-bottom:10px;"><input class="finput" id="shandle" placeholder="e.g. azwan" value="'+e(S.settingsForm.handle)+'"></div>'
+          +'<button class="bsec" style="width:100%;" data-a="save-handle">'+(S.handleBusy?'Saving…':'Save handle')+'</button>'
+        +'</div>'
+
+        +'<div class="settings-section">'
+          +'<h3>Change password</h3>'
+          +(S.passError?'<div class="errbar">'+e(S.passError)+'</div>':'')
+          +(S.passSuccess?'<div class="okbar">'+e(S.passSuccess)+'</div>':'')
+          +'<div class="field" style="margin-bottom:10px;"><input class="finput" id="snewpass" type="password" placeholder="New password (6+ characters)" value="'+e(S.settingsForm.newPassword)+'"></div>'
+          +'<div class="field" style="margin-bottom:10px;"><input class="finput" id="sconfirmpass" type="password" placeholder="Confirm new password" value="'+e(S.settingsForm.confirmPassword)+'"></div>'
+          +'<button class="bsec" style="width:100%;" data-a="save-password">'+(S.passBusy?'Saving…':'Update password')+'</button>'
+        +'</div>'
+
+        +'<div class="settings-section">'
+          +'<h3>Spaces</h3>'
+          +(S.projectError?'<div class="errbar">'+e(S.projectError)+'</div>':'')
+          +spaceEmptyHtml
+          +spaceRows
+        +'</div>'
+
+        +'<div class="settings-section">'
+          +'<h3>Tags</h3>'
+          +(S.tagError?'<div class="errbar">'+e(S.tagError)+'</div>':'')
+          +tagEmptyHtmlS
+          +tagRowsS
+        +'</div>'
+
+        +'<div class="settings-section">'
+          +'<h3>Export your data</h3>'
+          +'<div class="proj-hint" style="margin-bottom:12px;">JSON is best for backups, restore it later from here. CSV opens directly in a spreadsheet app so you can browse or share it, but it can\'t be restored.</div>'
+          +'<button class="bsec" style="width:100%;margin-bottom:10px;" data-a="export-data">Download backup (JSON)</button>'
+          +'<button class="bsec" style="width:100%;" data-a="export-csv">Download as spreadsheet (CSV)</button>'
+        +'</div>'
+
+        +'<div class="settings-section">'
+          +'<h3>Restore from backup</h3>'
+          +(S.importError?'<div class="errbar">'+e(S.importError)+'</div>':'')
+          +(S.importSuccess?'<div class="okbar">'+e(S.importSuccess)+'</div>':'')
+          +'<div class="proj-hint" style="margin-bottom:12px;">Choose a JSON backup you downloaded earlier. This adds those items back in as new entries, it never deletes or overwrites anything already in your account.</div>'
+          +'<input type="file" id="importFile" accept=".json,application/json" style="display:none;">'
+          +'<button class="bsec" style="width:100%;" data-a="trigger-import">'+(S.importBusy?'Restoring…':'Choose backup file')+'</button>'
+        +'</div>'
+
+        +'<div class="settings-section">'
+          +'<h3>App tour</h3>'
+          +'<div class="proj-hint" style="margin-bottom:12px;">Replay the quick walkthrough of how Repause works.</div>'
+          +'<button class="bsec" style="width:100%;" data-a="replay-onboarding">Replay walkthrough</button>'
+        +'</div>'
+
+        +'<button class="logout-btn" style="width:100%;" data-a="logout">Log out</button>'
+      +'</div>';
+  }
+  else if(S.view==='projects'){
+    const sortedProjects=S.projects.slice().sort(function(a,b){return a.name.localeCompare(b.name);});
+    const rows=sortedProjects.map(function(p){
+      const count=projectCount(p.name);
+      return '<div class="proj-row">'
+        +'<div class="proj-top">'
+          +'<div class="proj-name" data-a="proj-filter" data-name="'+e(p.name)+'">'+e(p.name)+'</div>'
+          +'<div class="proj-count">'+count+'</div>'
+        +'</div>'
+      +'</div>';
+    }).join('');
+    const emptyHtml=sortedProjects.length===0?'<div class="empty">No Spaces yet. Add one below, or just start typing a space name next time you pause something.</div>':'';
+    const tagList=allTags();
+    const tagRows=tagList.map(function(t){
+      return '<div class="proj-row">'
+        +'<div class="proj-top">'
+          +'<div class="proj-name" data-a="tag-filter" data-name="'+e(t)+'">#'+e(t)+'</div>'
+          +'<div class="proj-count">'+tagCount(t)+'</div>'
+        +'</div>'
+      +'</div>';
+    }).join('');
+    const tagEmptyHtml=tagList.length===0?'<div class="empty">No tags yet. Add some from the Pause form.</div>':'';
+    el.innerHTML=
+      topBar()
+      +'<div class="screen">'
+        +'<button class="back-btn" data-a="go-home"><span class="back-arrow"></span>Back</button>'
+        +'<div class="rtitle" style="margin-bottom:20px;">Spaces</div>'
+        +(S.projectError?'<div class="errbar">'+e(S.projectError)+'</div>':'')
+        +(S.projectAddError?'<div class="errbar">'+e(S.projectAddError)+'</div>':'')
+        +'<div class="proj-add">'
+          +'<input class="finput" id="newProjectInput" placeholder="New space name" value="'+e(S.newProjectName)+'">'
+          +'<button data-a="proj-add">'+(S.projectBusy?'…':'Add')+'</button>'
+        +'</div>'
+        +emptyHtml
+        +rows
+        +'<div class="rtitle" style="margin:28px 0 16px;font-size:16px;">Tags</div>'
+        +tagEmptyHtml
+        +tagRows
+        +'<div class="proj-hint">Tap a Space or Tag to filter Home. Manage names, merges, and deletions from Settings.</div>'
+      +'</div>';
+  }
+  else if(S.view==='faq'){
+    const sectionsHtml=FAQ.map(function(sec,si){
+      const itemsHtml=sec.items.map(function(it,ii){
+        const key=si+'-'+ii;
+        const isOpen=!!S.faqOpen[key];
+        return '<div class="faq-item">'
+          +'<div class="faq-q" data-a="faq-toggle" data-key="'+key+'">'
+            +'<span>'+e(it.q)+'</span>'
+            +'<span class="faq-chev">'+(isOpen?'−':'+')+'</span>'
+          +'</div>'
+          +(isOpen?'<div class="faq-a">'+e(it.a)+'</div>':'')
+        +'</div>';
+      }).join('');
+      return '<div class="faq-section"><h4>'+e(sec.section)+'</h4>'+itemsHtml+'</div>';
+    }).join('');
+    el.innerHTML=
+      topBar()
+      +'<div class="screen">'
+        +'<button class="back-btn" data-a="go-home"><span class="back-arrow"></span>Back</button>'
+        +'<div class="rtitle" style="margin-bottom:20px;">FAQ</div>'
+        +sectionsHtml
+      +'</div>';
+  }
+  else if(S.view==='success'){
+    el.innerHTML=topBar()+'<div class="suc"><div class="sic">✓</div><div style="font-size:20px;font-weight:700;">Back in it!</div><div style="font-size:13px;color:var(--tx2)">Marked as resumed. Go get it.</div></div>';
+  }
+  el.innerHTML+=botNav();
+  el.innerHTML+=toastBanner();
+  el.innerHTML+=onboardingOverlay();
+}
+
+function toastBanner(){
+  if(!S.toast)return '';
+  return '<div class="toast">'
+    +'<span>'+e(S.toast.message)+'</span>'
+    +'<span class="toast-undo" data-a="undo-toast">Undo</span>'
+  +'</div>';
+}
+
+function onboardingOverlay(){
+  if(!S.onboardingOpen)return '';
+  const step=ONBOARDING[S.onboardingStep];
+  const isLast=S.onboardingStep===ONBOARDING.length-1;
+  const dots=ONBOARDING.map(function(_,i){return '<div class="onboard-dot'+(i===S.onboardingStep?' on':'')+'"></div>';}).join('');
+  return '<div class="onboard-backdrop">'
+    +'<div class="onboard-card">'
+      +'<div class="onboard-icon">'+step.icon+'</div>'
+      +'<div class="onboard-title">'+e(step.title)+'</div>'
+      +'<div class="onboard-body">'+e(step.body)+'</div>'
+      +'<div class="onboard-dots">'+dots+'</div>'
+      +'<button class="bsv" data-a="onboard-next">'+(isLast?'Get started':'Next')+'</button>'
+      +(isLast?'':'<div class="onboard-skip" data-a="onboard-skip">Skip</div>')
+    +'</div>'
+  +'</div>';
+}
+
+function botNav(){
+  const onHome=S.view==='home';
+  const onProjects=S.view==='projects';
+  const onSettings=S.view==='settings';
+  const onFaq=S.view==='faq';
+  return '<div class="bottomnav">'
+    +'<button class="nav-item'+(onHome?' on':'')+'" data-a="go-home"><div class="nav-icon"><span class="emoji-mono">🏠</span></div>Home</button>'
+    +'<button class="nav-item'+(onProjects?' on':'')+'" data-a="go-projects"><div class="nav-icon"><span class="emoji-mono">📁</span></div>Spaces</button>'
+    +'<button class="nav-pause" data-a="go-pause"><div class="nav-icon">⏸</div>Pause</button>'
+    +'<button class="nav-item'+(onSettings?' on':'')+'" data-a="go-settings"><div class="nav-icon"><span class="emoji-mono">⚙</span></div>Settings</button>'
+    +'<button class="nav-item'+(onFaq?' on':'')+'" data-a="go-faq"><div class="nav-icon"><span class="emoji-mono">❓</span></div>FAQ</button>'
+  +'</div>';
+}
+
+function topBar(showSearch){
+  if(showSearch){
+    return '<div class="topbar" style="justify-content:space-between;">'
+      +'<div style="width:34px;"></div>'
+      +'<div class="logo">Re<span>pause</span></div>'
+      +'<button class="icon-btn" data-a="toggle-search" title="Search">🔍</button>'
+    +'</div>';
+  }
+  return '<div class="topbar"><div class="logo">Re<span>pause</span></div></div>';
+}
+
+function updSave(){
+  const b=document.getElementById('sbtn');if(!b)return;
+  const fp=document.getElementById('fp'),fth=document.getElementById('fth'),fn=document.getElementById('fn');
+  const ok=fp&&fth&&fn&&fp.value.trim()&&fth.value.trim()&&fn.value.trim()&&!S.saving;
+  b.disabled=!ok;
+  b.className='bsv'+(ok?'':' off');
+}
+
+document.getElementById('up').addEventListener('click',async function(ev){
+  const t=ev.target.closest('[data-a]');
+  if(!t)return;
+  const a=t.dataset.a;
+
+  if(a==='go-home'){S.view='home';S.editId=null;draw();}
+  else if(a==='go-settings'){
+    S.settingsForm.handle=S.profile.handle;
+    S.settingsForm.newPassword='';S.settingsForm.confirmPassword='';
+    S.handleError=null;S.handleSuccess=null;
+    S.passError=null;S.passSuccess=null;
+    S.projectError=null;S.projectEditId=null;S.projectMergeId=null;
+    S.tagError=null;S.tagEditName=null;S.tagMergeName=null;
+    S.importError=null;S.importSuccess=null;
+    if(!S.projectsLoaded)loadProjects();
+    S.view='settings';draw();
+  }
+  else if(a==='save-handle'){
+    if(S.handleBusy)return;
+    const sh=document.getElementById('shandle');
+    const handle=sh?sh.value.trim():'';
+    if(!handle){S.handleError='Please enter a handle.';S.handleSuccess=null;draw();return;}
+    if(!/^[a-zA-Z0-9_.]{3,20}$/.test(handle)){
+      S.handleError='Use 3-20 characters: letters, numbers, dots, or underscores only.';
+      S.handleSuccess=null;draw();return;
+    }
+    S.handleBusy=true;S.handleError=null;S.handleSuccess=null;draw();
+    try{
+      const {error}=await sb.from('profiles').upsert({id:S.session.user.id,handle:handle},{onConflict:'id'});
+      if(error)throw error;
+      S.profile.handle=handle;
+      S.handleBusy=false;
+      S.handleSuccess='Handle saved.';
+      draw();
+    }catch(err){
+      console.error('Save handle failed:',err);
+      S.handleBusy=false;
+      if(err.message&&err.message.toLowerCase().includes('duplicate')){
+        S.handleError='That handle is already taken. Try another.';
+      }else{
+        S.handleError='Could not save. Check your connection and try again.';
+      }
+      draw();
+    }
+  }
+  else if(a==='save-password'){
+    if(S.passBusy)return;
+    const np=document.getElementById('snewpass'),cp=document.getElementById('sconfirmpass');
+    const newPass=np?np.value:'',confirmPass=cp?cp.value:'';
+    if(!newPass||!confirmPass){S.passError='Please fill in both password fields.';S.passSuccess=null;draw();return;}
+    if(newPass.length<6){S.passError='Password must be at least 6 characters.';S.passSuccess=null;draw();return;}
+    if(newPass!==confirmPass){S.passError='Passwords do not match.';S.passSuccess=null;draw();return;}
+    S.passBusy=true;S.passError=null;S.passSuccess=null;draw();
+    try{
+      const {error}=await sb.auth.updateUser({password:newPass});
+      if(error)throw error;
+      S.passBusy=false;
+      S.passSuccess='Password updated.';
+      S.settingsForm.newPassword='';S.settingsForm.confirmPassword='';
+      draw();
+    }catch(err){
+      console.error('Update password failed:',err);
+      S.passBusy=false;
+      S.passError=err.message||'Could not update password. Try again.';
+      draw();
+    }
+  }
+  else if(a==='switch-mode'){
+    S.authMode=S.authMode==='login'?'signup':'login';
+    S.authError=null;
+    draw();
+  }
+  else if(a==='go-forgot-password'){
+    S.resetForm={email:S.authForm.email||''};
+    S.resetError=null;S.resetSuccess=null;
+    S.authMode='reset';draw();
+  }
+  else if(a==='back-to-login'){
+    S.authMode='login';
+    S.resetError=null;S.resetSuccess=null;
+    draw();
+  }
+  else if(a==='do-reset-request'){
+    if(S.resetBusy)return;
+    const remail=document.getElementById('remail');
+    const email=remail?remail.value.trim():'';
+    if(!email){S.resetError='Please enter your email.';S.resetSuccess=null;draw();return;}
+    S.resetBusy=true;S.resetError=null;S.resetSuccess=null;draw();
+    try{
+      const redirectTo=window.location.origin+window.location.pathname.replace(/index\.html$/,'');
+      const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:redirectTo});
+      if(error)throw error;
+      S.resetBusy=false;
+      S.resetSuccess='Check your email for a reset link.';
+      draw();
+    }catch(err){
+      console.error('Reset request failed:',err);
+      S.resetBusy=false;
+      S.resetError=err.message||'Could not send reset email. Please try again.';
+      draw();
+    }
+  }
+  else if(a==='do-reset-password'){
+    if(S.resetPassBusy)return;
+    const np=document.getElementById('rpNewPass'),cp=document.getElementById('rpConfirmPass');
+    const newPass=np?np.value:'',confirmPass=cp?cp.value:'';
+    if(!newPass||!confirmPass){S.resetPassError='Please fill in both password fields.';draw();return;}
+    if(newPass.length<6){S.resetPassError='Password must be at least 6 characters.';draw();return;}
+    if(newPass!==confirmPass){S.resetPassError='Passwords do not match.';draw();return;}
+    S.resetPassBusy=true;S.resetPassError=null;draw();
+    try{
+      const {error}=await sb.auth.updateUser({password:newPass});
+      if(error)throw error;
+      S.resetPassBusy=false;
+      S.view='home';
+      loadProfile();loadContexts();loadProjects();
+      draw();
+    }catch(err){
+      console.error('Set new password failed:',err);
+      S.resetPassBusy=false;
+      S.resetPassError=err.message||'Could not update password. Try again.';
+      draw();
+    }
+  }
+  else if(a==='do-login'||a==='do-signup'){
+    if(S.authBusy)return;
+    const aemail=document.getElementById('aemail'),apass=document.getElementById('apass');
+    const email=aemail?aemail.value.trim():'';
+    const password=apass?apass.value:'';
+    if(!email||!password){
+      S.authError='Please fill in both email and password.';
+      draw();return;
+    }
+    if(password.length<6){
+      S.authError='Password must be at least 6 characters.';
+      draw();return;
+    }
+    S.authBusy=true;S.authError=null;draw();
+    try{
+      if(a==='do-signup'){
+        const redirectTo=window.location.origin+window.location.pathname.replace(/index\.html$/,'');
+        const {data,error}=await sb.auth.signUp({email:email,password:password,options:{emailRedirectTo:redirectTo}});
+        if(error)throw error;
+        if(data.session){
+          S.session=data.session;S.authBusy=false;
+          S.view='home';loadContexts();
+        }else{
+          S.authBusy=false;
+          S.authError='Account created. Check your email to confirm, then log in.';
+          S.authMode='login';draw();
+        }
+      }else{
+        const {data,error}=await sb.auth.signInWithPassword({email:email,password:password});
+        if(error)throw error;
+        S.session=data.session;S.authBusy=false;
+        S.view='home';loadContexts();
+      }
+    }catch(err){
+      console.error('Auth failed:',err);
+      S.authBusy=false;
+      S.authError=err.message||'Something went wrong. Please try again.';
+      draw();
+    }
+  }
+  else if(a==='logout'){
+    await sb.auth.signOut();
+    S.session=null;S.ctxs=[];S.greeting=null;S.view='auth';S.authForm={email:'',password:''};draw();
+  }
+  else if(a==='export-data'){
+    const data=S.ctxs.map(function(c){
+      return {
+        project:c.project,
+        doing:c.doing,
+        thinking:c.thinking,
+        next_step:c.next,
+        notes:c.notes,
+        tags:c.tags,
+        status:c.status,
+        created_at:c.at
+      };
+    });
+    const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const stamp=new Date().toISOString().slice(0,10);
+    const link=document.createElement('a');
+    link.href=url;
+    link.download='repause-backup-'+stamp+'.json';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
+  else if(a==='export-csv'){
+    const csv=buildCsv();
+    const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+    const url=URL.createObjectURL(blob);
+    const stamp=new Date().toISOString().slice(0,10);
+    const link=document.createElement('a');
+    link.href=url;
+    link.download='repause-backup-'+stamp+'.csv';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
+  else if(a==='trigger-import'){
+    if(S.importBusy)return;
+    S.importError=null;S.importSuccess=null;
+    const fileInput=document.getElementById('importFile');
+    if(fileInput)fileInput.click();
+  }
+  else if(a==='onboard-next'){
+    if(S.onboardingStep>=ONBOARDING.length-1){
+      S.onboardingOpen=false;
+    }else{
+      S.onboardingStep++;
+    }
+    draw();
+  }
+  else if(a==='onboard-skip'){
+    S.onboardingOpen=false;draw();
+  }
+  else if(a==='undo-toast'){
+    if(!S.toast)return;
+    const contextId=S.toast.contextId,previousStatus=S.toast.previousStatus;
+    if(toastTimer){clearTimeout(toastTimer);toastTimer=null;}
+    S.toast=null;draw();
+    try{
+      const {data,error}=await sb.from('contexts').update({status:previousStatus}).eq('id',contextId).select().single();
+      if(error)throw error;
+      S.ctxs=S.ctxs.map(function(c){return c.id===contextId?rowToCtx(data):c;});
+      draw();
+    }catch(err){
+      console.error('Undo failed:',err);
+      S.error='Could not undo. Check your connection and try again.';
+      draw();
+    }
+  }
+  else if(a==='faq-toggle'){
+    const key=t.dataset.key;
+    S.faqOpen[key]=!S.faqOpen[key];
+    draw();
+  }
+  else if(a==='replay-onboarding'){
+    S.onboardingStep=0;S.onboardingOpen=true;
+    S.view='home';draw();
+  }
+  else if(a==='go-pause'){S.editId=null;S.form={project:'',doing:'',thinking:'',next:'',notes:'',tags:''};S.view='pause';draw();}
+  else if(a==='view'){S.sel=t.dataset.id;S.view='resume';draw();}
+  else if(a==='tab'){S.tab=t.dataset.t;draw();}
+  else if(a==='edit'){
+    const c=S.ctxs.find(function(x){return x.id===S.sel;});
+    if(!c)return;
+    S.editId=c.id;
+    S.form={project:c.project,doing:c.doing||'',thinking:c.thinking,next:c.next,notes:c.notes||'',tags:(c.tags||[]).join(', ')};
+    S.view='pause';draw();
+  }
+  else if(a==='save'){
+    if(S.saving)return;
+    const fp=document.getElementById('fp'),fd=document.getElementById('fd'),fth=document.getElementById('fth'),fn=document.getElementById('fn'),fnotes=document.getElementById('fnotes'),ftags=document.getElementById('ftags');
+    if(!fp||!fth||!fn)return;
+    if(!fp.value.trim()||!fth.value.trim()||!fn.value.trim())return;
+    S.saving=true;updSave();
+
+    const payload={project:fp.value.trim(),doing:fd?fd.value.trim():'',thinking:fth.value.trim(),next_step:fn.value.trim(),notes:fnotes?fnotes.value.trim():'',tags:parseTags(ftags?ftags.value:'')};
+
+    try{
+      if(S.editId){
+        const {data,error}=await sb.from('contexts').update(payload).eq('id',S.editId).select().single();
+        if(error)throw error;
+        S.ctxs=S.ctxs.map(function(c){return c.id===S.editId?rowToCtx(data):c;});
+        S.sel=S.editId;S.editId=null;S.saving=false;
+        S.view='resume';draw();
+        ensureProjectExists(payload.project).then(draw);
+      }else{
+        const {data,error}=await sb.from('contexts').insert(Object.assign({status:'active',user_id:S.session.user.id},payload)).select().single();
+        if(error)throw error;
+        S.ctxs.unshift(rowToCtx(data));
+        S.saving=false;
+        S.view='home';S.tab='active';draw();
+        ensureProjectExists(payload.project).then(draw);
+      }
+    }catch(err){
+      console.error('Save failed:',err);
+      S.saving=false;
+      S.error='Could not save. Check your connection and try again.';
+      draw();
+    }
+  }
+  else if(a==='mark'){
+    const markedId=S.sel;
+    try{
+      const {data,error}=await sb.from('contexts').update({status:'done'}).eq('id',S.sel).select().single();
+      if(error)throw error;
+      S.ctxs=S.ctxs.map(function(c){return c.id===S.sel?rowToCtx(data):c;});
+      S.view='success';draw();
+      setTimeout(function(){
+        S.view='home';S.tab='done';draw();
+        showToast('Marked as resumed.',markedId,'active');
+      },1800);
+    }catch(err){
+      console.error('Update failed:',err);
+      S.error='Could not update. Check your connection and try again.';
+      S.view='home';draw();
+    }
+  }
+  else if(a==='archive'){
+    const prev=S.ctxs.find(function(c){return c.id===S.sel;});
+    const prevStatus=prev?prev.status:'active';
+    try{
+      const {data,error}=await sb.from('contexts').update({status:'archived'}).eq('id',S.sel).select().single();
+      if(error)throw error;
+      S.ctxs=S.ctxs.map(function(c){return c.id===S.sel?rowToCtx(data):c;});
+      S.view='home';S.tab='archived';draw();
+      showToast('Marked as done.',S.sel,prevStatus);
+    }catch(err){
+      console.error('Archive failed:',err);
+      S.error='Could not mark as done. Check your connection and try again.';
+      S.view='home';draw();
+    }
+  }
+  else if(a==='restore'||a==='reopen'){
+    const restoredId=S.sel;
+    const prevStatus=a==='restore'?'archived':'done';
+    try{
+      const {data,error}=await sb.from('contexts').update({status:'active'}).eq('id',S.sel).select().single();
+      if(error)throw error;
+      S.ctxs=S.ctxs.map(function(c){return c.id===S.sel?rowToCtx(data):c;});
+      S.view='home';S.tab='active';draw();
+      showToast('Repaused.',restoredId,prevStatus);
+    }catch(err){
+      console.error('Restore failed:',err);
+      S.error='Could not restore. Check your connection and try again.';
+      S.view='home';draw();
+    }
+  }
+  else if(a==='delete'){
+    if(!confirm('Delete this context permanently? This cannot be undone.'))return;
+    try{
+      const {error}=await sb.from('contexts').delete().eq('id',S.sel);
+      if(error)throw error;
+      S.ctxs=S.ctxs.filter(function(c){return c.id!==S.sel;});
+      S.view='home';S.tab='archived';draw();
+    }catch(err){
+      console.error('Delete failed:',err);
+      S.error='Could not delete. Check your connection and try again.';
+      S.view='home';draw();
+    }
+  }
+  else if(a==='go-faq'){
+    S.view='faq';draw();
+  }
+  else if(a==='go-projects'){
+    S.projectError=null;S.projectAddError=null;S.newProjectName='';
+    S.projectEditId=null;S.projectMergeId=null;
+    S.view='projects';draw();
+    if(!S.projectsLoaded)loadProjects().then(draw);
+  }
+  else if(a==='proj-filter'){
+    S.projectFilter=t.dataset.name;
+    S.view='home';S.tab='active';draw();
+  }
+  else if(a==='clear-project-filter'){
+    S.projectFilter=null;draw();
+  }
+  else if(a==='tag-filter'){
+    S.tagFilter=t.dataset.name;
+    S.view='home';S.tab='active';draw();
+  }
+  else if(a==='clear-tag-filter'){
+    S.tagFilter=null;draw();
+  }
+  else if(a==='toggle-search'){
+    S.searchOpen=!S.searchOpen;
+    if(!S.searchOpen)S.searchQuery='';
+    draw();
+    if(S.searchOpen){
+      setTimeout(function(){const el=document.getElementById('fsearch');if(el)el.focus();},0);
+    }
+  }
+  else if(a==='proj-add'){
+    if(S.projectBusy)return;
+    const inp=document.getElementById('newProjectInput');
+    const name=inp?inp.value.trim():'';
+    S.projectAddError=null;
+    if(!name){S.projectAddError='Enter a space name first.';draw();return;}
+    if(S.projects.some(function(p){return norm(p.name)===norm(name);})){
+      S.projectAddError='That space already exists.';draw();return;
+    }
+    S.projectBusy=true;draw();
+    try{
+      const {data,error}=await sb.from('projects').insert({user_id:S.session.user.id,name:name}).select().single();
+      if(error)throw error;
+      S.projects.push(data);
+      S.newProjectName='';
+      S.projectBusy=false;draw();
+    }catch(err){
+      console.error('Add project failed:',err);
+      S.projectBusy=false;
+      S.projectAddError='Could not add space. Check your connection and try again.';
+      draw();
+    }
+  }
+  else if(a==='proj-edit-start'){
+    const p=S.projects.find(function(x){return x.id===t.dataset.id;});
+    if(!p)return;
+    S.projectMergeId=null;
+    S.projectEditId=p.id;S.projectEditName=p.name;draw();
+  }
+  else if(a==='proj-edit-cancel'){
+    S.projectEditId=null;draw();
+  }
+  else if(a==='proj-edit-save'){
+    if(S.projectBusy)return;
+    const p=S.projects.find(function(x){return x.id===t.dataset.id;});
+    if(!p)return;
+    const inp=document.getElementById('peName');
+    const newName=inp?inp.value.trim():'';
+    if(!newName){S.projectError='Enter a space name.';draw();return;}
+    if(S.projects.some(function(x){return x.id!==p.id&&norm(x.name)===norm(newName);})){
+      S.projectError='Another space already has that name.';draw();return;
+    }
+    S.projectBusy=true;S.projectError=null;draw();
+    const oldName=p.name;
+    try{
+      const {error:pErr}=await sb.from('projects').update({name:newName}).eq('id',p.id);
+      if(pErr)throw pErr;
+      const {error:cErr}=await sb.from('contexts').update({project:newName}).eq('user_id',S.session.user.id).ilike('project',oldName);
+      if(cErr)throw cErr;
+      p.name=newName;
+      S.ctxs=S.ctxs.map(function(c){return norm(c.project)===norm(oldName)?Object.assign({},c,{project:newName}):c;});
+      S.projectEditId=null;S.projectBusy=false;draw();
+    }catch(err){
+      console.error('Rename project failed:',err);
+      S.projectBusy=false;
+      S.projectError='Could not rename. Check your connection and try again.';
+      draw();
+    }
+  }
+  else if(a==='proj-merge-start'){
+    S.projectEditId=null;
+    S.projectMergeId=t.dataset.id;draw();
+  }
+  else if(a==='proj-merge-cancel'){
+    S.projectMergeId=null;draw();
+  }
+  else if(a==='proj-merge-confirm'){
+    if(S.projectBusy)return;
+    const src=S.projects.find(function(x){return x.id===t.dataset.id;});
+    const sel=document.getElementById('mergeTarget');
+    const targetName=sel?sel.value:'';
+    if(!src||!targetName)return;
+    S.projectBusy=true;S.projectError=null;draw();
+    try{
+      const {error:cErr}=await sb.from('contexts').update({project:targetName}).eq('user_id',S.session.user.id).ilike('project',src.name);
+      if(cErr)throw cErr;
+      const {error:pErr}=await sb.from('projects').delete().eq('id',src.id);
+      if(pErr)throw pErr;
+      S.ctxs=S.ctxs.map(function(c){return norm(c.project)===norm(src.name)?Object.assign({},c,{project:targetName}):c;});
+      S.projects=S.projects.filter(function(x){return x.id!==src.id;});
+      if(S.projectFilter&&norm(S.projectFilter)===norm(src.name))S.projectFilter=targetName;
+      S.projectMergeId=null;S.projectBusy=false;draw();
+    }catch(err){
+      console.error('Merge project failed:',err);
+      S.projectBusy=false;
+      S.projectError='Could not merge. Check your connection and try again.';
+      draw();
+    }
+  }
+  else if(a==='proj-delete'){
+    if(S.projectBusy)return;
+    const p=S.projects.find(function(x){return x.id===t.dataset.id;});
+    if(!p)return;
+    if(projectCount(p.name)>0){
+      S.projectError='This space still has tasks under it. Merge it into another space first.';
+      draw();return;
+    }
+    if(!confirm('Delete "'+p.name+'"? This cannot be undone.'))return;
+    S.projectBusy=true;draw();
+    try{
+      const {error}=await sb.from('projects').delete().eq('id',p.id);
+      if(error)throw error;
+      S.projects=S.projects.filter(function(x){return x.id!==p.id;});
+      if(S.projectFilter&&norm(S.projectFilter)===norm(p.name))S.projectFilter=null;
+      S.projectBusy=false;draw();
+    }catch(err){
+      console.error('Delete project failed:',err);
+      S.projectBusy=false;
+      S.projectError='Could not delete. Check your connection and try again.';
+      draw();
+    }
+  }
+  else if(a==='tag-edit-start'){
+    const name=t.dataset.name;
+    if(!name)return;
+    S.tagMergeName=null;
+    S.tagEditName=name;S.tagEditNewName=name;draw();
+  }
+  else if(a==='tag-edit-cancel'){
+    S.tagEditName=null;draw();
+  }
+  else if(a==='tag-edit-save'){
+    if(S.tagBusy)return;
+    const oldName=t.dataset.name;
+    const inp=document.getElementById('teName');
+    const newName=inp?inp.value.trim():'';
+    if(!newName){S.tagError='Enter a tag name.';draw();return;}
+    S.tagBusy=true;S.tagError=null;draw();
+    try{
+      await renameOrMergeTag(oldName,newName);
+      if(S.tagFilter&&norm(S.tagFilter)===norm(oldName))S.tagFilter=newName;
+      S.tagEditName=null;S.tagBusy=false;draw();
+    }catch(err){
+      console.error('Rename tag failed:',err);
+      S.tagBusy=false;
+      S.tagError='Could not rename. Check your connection and try again.';
+      draw();
+    }
+  }
+  else if(a==='tag-merge-start'){
+    S.tagEditName=null;
+    S.tagMergeName=t.dataset.name;draw();
+  }
+  else if(a==='tag-merge-cancel'){
+    S.tagMergeName=null;draw();
+  }
+  else if(a==='tag-merge-confirm'){
+    if(S.tagBusy)return;
+    const src=t.dataset.name;
+    const sel=document.getElementById('tagMergeTarget');
+    const targetName=sel?sel.value:'';
+    if(!src||!targetName)return;
+    S.tagBusy=true;S.tagError=null;draw();
+    try{
+      await renameOrMergeTag(src,targetName);
+      if(S.tagFilter&&norm(S.tagFilter)===norm(src))S.tagFilter=targetName;
+      S.tagMergeName=null;S.tagBusy=false;draw();
+    }catch(err){
+      console.error('Merge tag failed:',err);
+      S.tagBusy=false;
+      S.tagError='Could not merge. Check your connection and try again.';
+      draw();
+    }
+  }
+  else if(a==='tag-delete'){
+    if(S.tagBusy)return;
+    const name=t.dataset.name;
+    if(!name)return;
+    const count=tagCount(name);
+    if(!confirm('Remove tag "'+name+'" from '+count+' task(s)? This cannot be undone.'))return;
+    S.tagBusy=true;S.tagError=null;draw();
+    try{
+      await removeTag(name);
+      if(S.tagFilter&&norm(S.tagFilter)===norm(name))S.tagFilter=null;
+      S.tagBusy=false;draw();
+    }catch(err){
+      console.error('Delete tag failed:',err);
+      S.tagBusy=false;
+      S.tagError='Could not remove tag. Check your connection and try again.';
+      draw();
+    }
+  }
+});
+
+document.getElementById('up').addEventListener('input',function(ev){
+  const id=ev.target.id;
+  if(id==='fp')S.form.project=ev.target.value;
+  else if(id==='fd')S.form.doing=ev.target.value;
+  else if(id==='fth')S.form.thinking=ev.target.value;
+  else if(id==='fn')S.form.next=ev.target.value;
+  else if(id==='fnotes')S.form.notes=ev.target.value;
+  else if(id==='ftags')S.form.tags=ev.target.value;
+  else if(id==='aemail')S.authForm.email=ev.target.value;
+  else if(id==='apass')S.authForm.password=ev.target.value;
+  else if(id==='remail')S.resetForm.email=ev.target.value;
+  else if(id==='rpNewPass')S.resetPassForm.newPassword=ev.target.value;
+  else if(id==='rpConfirmPass')S.resetPassForm.confirmPassword=ev.target.value;
+  else if(id==='fsearch')S.searchQuery=ev.target.value;
+  else if(id==='shandle')S.settingsForm.handle=ev.target.value;
+  else if(id==='snewpass')S.settingsForm.newPassword=ev.target.value;
+  else if(id==='sconfirmpass')S.settingsForm.confirmPassword=ev.target.value;
+  else if(id==='newProjectInput')S.newProjectName=ev.target.value;
+  else if(id==='peName')S.projectEditName=ev.target.value;
+  else if(id==='teName')S.tagEditNewName=ev.target.value;
+  updSave();
+});
+
+document.getElementById('up').addEventListener('keydown',function(ev){
+  if(ev.key==='Enter'&&ev.target&&ev.target.id==='fsearch'){
+    ev.preventDefault();
+    draw();
+    const el=document.getElementById('fsearch');
+    if(el){el.focus();const v=el.value;el.value='';el.value=v;}
+  }
+});
+
+document.getElementById('up').addEventListener('change',async function(ev){
+  if(!ev.target||ev.target.id!=='importFile')return;
+  const file=ev.target.files&&ev.target.files[0];
+  if(!file)return;
+  S.importError=null;S.importSuccess=null;
+  try{
+    const text=await file.text();
+    const data=JSON.parse(text);
+    if(!Array.isArray(data))throw new Error('That file doesn\'t look like a Repause backup.');
+    const valid=data.filter(function(item){
+      return item&&typeof item==='object'&&item.project&&item.thinking&&item.next_step;
+    });
+    if(valid.length===0){
+      S.importError='No valid items found in that file.';
+      draw();
+      return;
+    }
+    if(!confirm('Add '+valid.length+' item(s) from this backup as new entries? This will not delete or change anything currently in your account.')){
+      return;
+    }
+    S.importBusy=true;draw();
+    const rows=valid.map(function(item){
+      return {
+        user_id:S.session.user.id,
+        project:String(item.project).trim(),
+        doing:item.doing?String(item.doing):'',
+        thinking:String(item.thinking),
+        next_step:String(item.next_step),
+        notes:item.notes?String(item.notes):'',
+        tags:Array.isArray(item.tags)?item.tags.map(function(t){return String(t||'').trim();}).filter(function(t){return t;}):[],
+        status:['active','done','archived'].indexOf(item.status)!==-1?item.status:'active'
+      };
+    });
+    const {error}=await sb.from('contexts').insert(rows);
+    if(error)throw error;
+    await loadContexts();
+    S.importBusy=false;
+    S.importSuccess='Added '+rows.length+' item(s) from the backup.';
+    draw();
+  }catch(err){
+    console.error('Import failed:',err);
+    S.importBusy=false;
+    S.importError=err.message||'Could not read that file. Make sure it\'s a Repause JSON backup.';
+    draw();
+  }
+});
+
+init();
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('./service-worker.js', { scope: './' }).catch(function(err){
+      console.log('Service worker registration failed:', err);
+    });
+  });
+}
+</script>
+</body>
+</html>
