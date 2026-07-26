@@ -734,7 +734,7 @@ function rowToCtx(row){
 // Escapes HTML then turns any http(s)/www links in the text into tappable anchors.
 function linkify(s){
   const escaped=e(s);
-  return escaped.replace(/((https?:\/\/|www\.)[^\s<]+)/gi,function(match){
+  return escaped.replace(/(https?:\/\/[^\s<]+|www\.[^\s<]+|(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,24}(?:\/[^\s<]*)?)/gi,function(match){
     let href=match;
     if(!/^https?:\/\//i.test(href))href='https://'+href;
     return '<a href="'+href+'" target="_blank" rel="noopener noreferrer" style="color:var(--ac);text-decoration:underline;">'+match+'</a>';
@@ -1255,10 +1255,10 @@ function draw(){
         +'<button class="back-btn" data-a="go-home"><span class="back-arrow"></span>Back</button>'
         +'<div class="field"><div class="flabel">Space</div><input class="finput" id="fp" list="projectList" placeholder="What are you working on?" value="'+e(S.form.project)+'"></div>'
         +'<datalist id="projectList">'+S.projects.map(function(p){return '<option value="'+e(p.name)+'">';}).join('')+'</datalist>'
-        +'<div class="field"><div class="flabel">What you\'re doing (optional)</div><textarea class="finput" id="fd" rows="2" placeholder="Quick note on the task itself">'+e(S.form.doing)+'</textarea></div>'
-        +'<div class="field"><div class="flabel">What\'s in your head right now</div><textarea class="finput" id="fth" rows="3" placeholder="The context you don\'t want to lose">'+e(S.form.thinking)+'</textarea></div>'
-        +'<div class="field"><div class="flabel">First thing to do when you return</div><input class="finput" id="fn" placeholder="Your next step" value="'+e(S.form.next)+'"></div>'
-        +'<div class="field"><div class="flabel">Notes (optional)</div><textarea class="finput" id="fnotes" rows="2" placeholder="A reference note, or paste a link">'+e(S.form.notes)+'</textarea></div>'
+        +'<div class="field"><div class="flabel">What you\'re doing (optional)</div><textarea class="finput" id="fd" rows="2" autocomplete="off" placeholder="Quick note on the task itself">'+e(S.form.doing)+'</textarea></div>'
+        +'<div class="field"><div class="flabel">What\'s in your head right now</div><textarea class="finput" id="fth" rows="3" autocomplete="off" placeholder="The context you don\'t want to lose">'+e(S.form.thinking)+'</textarea></div>'
+        +'<div class="field"><div class="flabel">First thing to do when you return</div><input class="finput" id="fn" autocomplete="off" placeholder="Your next step" value="'+e(S.form.next)+'"></div>'
+        +'<div class="field"><div class="flabel">Notes (optional)</div><textarea class="finput" id="fnotes" rows="2" autocomplete="off" placeholder="A reference note, or paste a link">'+e(S.form.notes)+'</textarea></div>'
         +'<div class="field"><div class="flabel">Tags (optional)</div><input class="finput" id="ftags" list="tagList" placeholder="e.g. urgent, waiting on client" value="'+e(S.form.tags)+'"></div>'
         +'<datalist id="tagList">'+allTags().map(function(t){return '<option value="'+e(t)+'">';}).join('')+'</datalist>'
         +'<button class="bsv off" id="sbtn" data-a="save">'+(S.saving?'Saving…':(isEdit?'Save changes':'Save and pause'))+'</button>'
