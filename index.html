@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Repause</title>
+<title>rePause</title>
 <link rel="manifest" href="./manifest.json">
 <meta name="theme-color" content="#121212">
 <link rel="icon" href="./icons/icon-192.png">
@@ -776,12 +776,12 @@ const GREETINGS = [
 
 const NEW_USER_GREETINGS = [
   'Welcome, {name}. Got something on your mind right now? Pause it here so you don\'t lose it.',
-  'Hey {name}, welcome to Repause. Whenever you get interrupted, this is where you capture it.',
+  'Hey {name}, welcome to rePause. Whenever you get interrupted, this is where you capture it.',
   '{name}, welcome aboard. Anything you\'re working on right now worth pausing?'
 ];
 
 const ONBOARDING = [
-  {icon:'⏸',title:'Welcome to Repause',body:'Whenever something interrupts you, capture what\'s in your head here so you can pick up right where you left off.'},
+  {icon:'⏸',title:'Welcome to rePause',body:'Whenever something interrupts you, capture what\'s in your head here so you can pick up right where you left off.'},
   {icon:'✎',title:'Pause anything, anytime',body:'Tap Pause, jot down a Space (what it\'s for), what\'s on your mind, and your next step. That\'s all you need.'},
   {icon:'📁',title:'Stay organized',body:'Group related items into Spaces, and add optional Tags to find things later, "urgent," "waiting on someone," whatever helps you search.'},
   {icon:'❓',title:'Need a hand later?',body:'Tap the FAQ icon in the bottom bar anytime for how-tos and common questions. You can also replay this walkthrough from Settings.'}
@@ -815,7 +815,7 @@ const FAQ=[
   {
     section:'Getting started',
     items:[
-      {q:'What is Repause?',a:'A place to save the context of what you\'re working on right before you get interrupted, so you can pick it back up later without losing your train of thought.'},
+      {q:'What is rePause?',a:'A place to save the context of what you\'re working on right before you get interrupted, so you can pick it back up later without losing your train of thought.'},
       {q:'How do I save something?',a:'Tap "Pause" at the bottom, fill in the Space, what\'s in your head, and your next step, then save.'},
       {q:'Which fields are required?',a:'Space, what\'s in your head, and your next step. "What you\'re doing," Notes, and Tags are all optional.'},
       {q:'Can I add a note or link when pausing something?',a:'Yes, there\'s an optional Notes field. If you paste a web link in there, it becomes tappable when you view the item later.'}
@@ -826,7 +826,7 @@ const FAQ=[
     items:[
       {q:'What\'s the difference between Paused, Resumed, and Done?',a:'Paused is anything you\'ve saved and haven\'t touched since. Resumed means you\'ve picked it back up (tap "Mark as resumed" on a Paused item). Done means you\'re finished with it entirely.'},
       {q:'What does the amber warning badge mean?',a:'A Paused item is flagged once it\'s been sitting untouched for over 24 hours, just a nudge that it might be going stale.'},
-      {q:'I marked something Done by mistake. Can I get it back?',a:'Yes, open it from the Done tab and tap "Repause this item."'}
+      {q:'I marked something Done by mistake. Can I get it back?',a:'Yes, open it from the Done tab and tap "rePause this item."'}
     ]
   },
   {
@@ -849,7 +849,7 @@ const FAQ=[
     section:'Account & data',
     items:[
       {q:'Is my data private?',a:'Yes, everything is tied to your account and only visible to you.'},
-      {q:'Can I use Repause on more than one device?',a:'Yes, log in with the same account anywhere and your Paused/Resumed/Done items stay in sync.'},
+      {q:'Can I use rePause on more than one device?',a:'Yes, log in with the same account anywhere and your Paused/Resumed/Done items stay in sync.'},
       {q:'Can I install this like an app?',a:'Yes, most phones let you "Add to Home Screen" from the browser menu for a full-screen, app-like experience.'}
     ]
   },
@@ -857,7 +857,7 @@ const FAQ=[
     section:'Backups & restore',
     items:[
       {q:'Do I need to back up my data?',a:'Not really. Everything is already stored online and shows up the moment you log in on any device, a backup is more of an extra safety net or a personal copy, not something you need for normal use.'},
-      {q:'What\'s the difference between the JSON and CSV download?',a:'JSON is the one to keep for backups, it\'s the format Restore understands. CSV opens directly in a spreadsheet app like Excel, Google Sheets, or Numbers so you can browse or share it, but it can\'t be restored back into Repause.'},
+      {q:'What\'s the difference between the JSON and CSV download?',a:'JSON is the one to keep for backups, it\'s the format Restore understands. CSV opens directly in a spreadsheet app like Excel, Google Sheets, or Numbers so you can browse or share it, but it can\'t be restored back into rePause.'},
       {q:'When would I actually use Restore?',a:'Mainly two situations: you accidentally deleted something forever and want it back, or you\'re bringing old items into a different account. Restore always adds items back in as new entries, it never deletes or overwrites what\'s already there.'},
       {q:'Will restoring the same backup twice cause duplicates?',a:'Yes. Restore doesn\'t check for existing items, it just adds whatever is in the file, so only restore a given backup once unless you want duplicates.'},
       {q:'Where do I find Export and Restore?',a:'Both live in Settings, below the Tags section.'}
@@ -1124,7 +1124,7 @@ function draw(){
     if(mode==='reset'){
       el.innerHTML=
         '<div class="screen" style="padding-top:70px;">'
-          +'<div class="logo" style="text-align:center;font-size:26px;margin-bottom:6px;">Re<span>pause</span></div>'
+          +'<div class="logo" style="text-align:center;font-size:26px;margin-bottom:6px;">re<span>Pause</span></div>'
           +'<div style="text-align:center;color:var(--tx2);font-size:13px;margin-bottom:28px;">Reset your password</div>'
           +(S.resetError?'<div class="errbar">'+e(S.resetError)+'</div>':'')
           +(S.resetSuccess?'<div class="okbar">'+e(S.resetSuccess)+'</div>':'')
@@ -1139,7 +1139,7 @@ function draw(){
     }
     el.innerHTML=
       '<div class="screen" style="padding-top:70px;">'
-        +'<div class="logo" style="text-align:center;font-size:26px;margin-bottom:6px;">Re<span>pause</span></div>'
+        +'<div class="logo" style="text-align:center;font-size:26px;margin-bottom:6px;">re<span>Pause</span></div>'
         +'<div style="text-align:center;color:var(--tx2);font-size:13px;margin-bottom:28px;">Pick up right where you left off</div>'
         +(S.authError?'<div class="errbar">'+e(S.authError)+'</div>':'')
         +'<div class="field"><div class="flabel">Email</div><input class="finput" id="aemail" type="email" placeholder="you@example.com" value="'+e(S.authForm.email)+'"></div>'
@@ -1156,7 +1156,7 @@ function draw(){
   if(S.view==='resetPassword'){
     el.innerHTML=
       '<div class="screen" style="padding-top:70px;">'
-        +'<div class="logo" style="text-align:center;font-size:26px;margin-bottom:6px;">Re<span>pause</span></div>'
+        +'<div class="logo" style="text-align:center;font-size:26px;margin-bottom:6px;">re<span>Pause</span></div>'
         +'<div style="text-align:center;color:var(--tx2);font-size:13px;margin-bottom:28px;">Set a new password</div>'
         +(S.resetPassError?'<div class="errbar">'+e(S.resetPassError)+'</div>':'')
         +'<div class="field"><div class="flabel">New password</div><input class="finput" id="rpNewPass" type="password" placeholder="At least 6 characters" value="'+e(S.resetPassForm.newPassword)+'"></div>'
@@ -1223,7 +1223,7 @@ function draw(){
         S.onboardingStep=0;
       }
     }
-    const greetHtml='<div class="greet-wrap"><div class="greet-avatar"><img src="./icons/icon-192.png" alt="Repause"></div><div class="greet-bubble">'+S.greeting+'</div></div>';
+    const greetHtml='<div class="greet-wrap"><div class="greet-avatar"><img src="./icons/icon-192.png" alt="rePause"></div><div class="greet-bubble">'+S.greeting+'</div></div>';
     const chips=[];
     if(S.projectFilter)chips.push('<div class="filter-chip" data-a="clear-project-filter">📁 '+e(S.projectFilter)+' ✕</div>');
     if(S.tagFilter)chips.push('<div class="filter-chip tag" data-a="clear-tag-filter">#'+e(S.tagFilter)+' ✕</div>');
@@ -1290,11 +1290,11 @@ function draw(){
           +'<button class="bsec warn" data-a="archive">✓ Done</button>'
         +'</div>'
         +'<div class="brow">'
-          +'<button class="bsec" data-a="reopen">↺ Repause this item</button>'
+          +'<button class="bsec" data-a="reopen">↺ rePause this item</button>'
         +'</div>';
     }else if(sel.status==='archived'){
       actions='<div class="brow">'
-          +'<button class="bsec" data-a="restore">↺ Repause this item</button>'
+          +'<button class="bsec" data-a="restore">↺ rePause this item</button>'
           +'<button class="bsec danger" data-a="delete">🗑 Delete forever</button>'
         +'</div>';
     }
@@ -1456,7 +1456,7 @@ function draw(){
 
         +'<div class="settings-section">'
           +'<h3>App tour</h3>'
-          +'<div class="proj-hint" style="margin-bottom:12px;">Replay the quick walkthrough of how Repause works.</div>'
+          +'<div class="proj-hint" style="margin-bottom:12px;">Replay the quick walkthrough of how rePause works.</div>'
           +'<button class="bsec" style="width:100%;" data-a="replay-onboarding">Replay walkthrough</button>'
         +'</div>'
 
@@ -1578,11 +1578,11 @@ function topBar(showSearch){
   if(showSearch){
     return '<div class="topbar" style="justify-content:space-between;">'
       +'<div style="width:34px;"></div>'
-      +'<div class="logo">Re<span>pause</span></div>'
+      +'<div class="logo">re<span>Pause</span></div>'
       +'<button class="icon-btn" data-a="toggle-search" title="Search">🔍</button>'
     +'</div>';
   }
-  return '<div class="topbar"><div class="logo">Re<span>pause</span></div></div>';
+  return '<div class="topbar"><div class="logo">re<span>Pause</span></div></div>';
 }
 
 function updSave(){
@@ -1922,7 +1922,7 @@ document.getElementById('up').addEventListener('click',async function(ev){
       if(error)throw error;
       S.ctxs=S.ctxs.map(function(c){return c.id===S.sel?rowToCtx(data):c;});
       S.view='home';S.tab='active';draw();
-      showToast('Repaused.',restoredId,prevStatus);
+      showToast('rePaused.',restoredId,prevStatus);
     }catch(err){
       console.error('Restore failed:',err);
       S.error='Could not restore. Check your connection and try again.';
@@ -2197,7 +2197,7 @@ document.getElementById('up').addEventListener('change',async function(ev){
   try{
     const text=await file.text();
     const data=JSON.parse(text);
-    if(!Array.isArray(data))throw new Error('That file doesn\'t look like a Repause backup.');
+    if(!Array.isArray(data))throw new Error('That file doesn\'t look like a rePause backup.');
     const valid=data.filter(function(item){
       return item&&typeof item==='object'&&item.project&&item.thinking&&item.next_step;
     });
@@ -2231,7 +2231,7 @@ document.getElementById('up').addEventListener('change',async function(ev){
   }catch(err){
     console.error('Import failed:',err);
     S.importBusy=false;
-    S.importError=err.message||'Could not read that file. Make sure it\'s a Repause JSON backup.';
+    S.importError=err.message||'Could not read that file. Make sure it\'s a rePause JSON backup.';
     draw();
   }
 });

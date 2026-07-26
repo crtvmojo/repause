@@ -1,7 +1,7 @@
 {
-  "name": "Repause",
-  "short_name": "Repause",
-  "description": "Pick up right where you left off. Repause helps you resume context on any task in seconds.",
+  "name": "rePause",
+  "short_name": "rePause",
+  "description": "Pick up right where you left off. rePause helps you resume context on any task in seconds.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
