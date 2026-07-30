@@ -149,6 +149,50 @@
     gap:12px;
     overflow-y:auto;
   }
+
+  /* Desktop board layout wrapper. Mobile: only the active tab's column is
+     shown (identical to the old single-.list behavior). Desktop: all three
+     columns render side by side, Trello-style, no drag-and-drop. */
+  .board{
+    display:flex;
+    flex-direction:column;
+    flex:1;
+    min-height:0;
+  }
+  .list-col{display:none;}
+  .list-col.on{
+    display:flex;
+    flex-direction:column;
+    flex:1;
+    min-height:0;
+  }
+  .board-col-title{display:none;}
+
+  @media (min-width:900px){
+    #up:has(.board){max-width:1080px;}
+    .tabs{display:none;}
+    .board{
+      flex-direction:row;
+      gap:20px;
+      align-items:flex-start;
+      padding:0 20px;
+    }
+    .list-col{
+      display:flex!important;
+      flex:1;
+      min-width:0;
+    }
+    .board-col-title{
+      display:block;
+      font-size:12px;
+      font-weight:700;
+      letter-spacing:0.04em;
+      color:var(--tx2);
+      text-transform:uppercase;
+      margin-bottom:12px;
+    }
+    .list{padding:0 0 40px;}
+  }
   .card{
     background:var(--card);
     border-radius:var(--radius);
@@ -1180,18 +1224,17 @@ function draw(){
     const active=S.ctxs.filter(c=>c.status==='active').filter(byFilter);
     const done=S.ctxs.filter(c=>c.status==='done').filter(byFilter);
     const archived=S.ctxs.filter(c=>c.status==='archived').filter(byFilter);
-    const lists={active:active,done:done,archived:archived};
-    const list=lists[S.tab];
     const emptyMsg={
       active:'No paused contexts yet. Hit "Pause here" to save one.',
       done:'Nothing resumed yet.',
       archived:'Nothing marked done yet.'
     };
-    let cardsHtml='';
-    if(list.length===0){
-      cardsHtml='<div class="empty">'+emptyMsg[S.tab]+'</div>';
-    }else{
-      cardsHtml=list.map(function(c){
+    // Builds card markup for one status column. Used for all three columns
+    // so the desktop board (§10 backlog: 3-column layout) and the mobile
+    // single-tab view share the exact same card rendering.
+    function cardsHtmlFor(items,tabKey){
+      if(items.length===0)return '<div class="empty">'+emptyMsg[tabKey]+'</div>';
+      return items.map(function(c){
         const stale=c.status==='active'&&isStale(c.at);
         const arrowLabel=c.status==='active'?'Resume →':(c.status==='archived'?'View →':'Resumed ✓');
         const tags=c.tags||[];
@@ -1245,7 +1288,11 @@ function draw(){
         +'<div class="tab'+(S.tab==='done'?' on':'')+'" data-a="tab" data-t="done">Resumed ('+done.length+')</div>'
         +'<div class="tab'+(S.tab==='archived'?' on':'')+'" data-a="tab" data-t="archived">Done ('+archived.length+')</div>'
       +'</div>'
-      +'<div class="list">'+cardsHtml+'</div>';
+      +'<div class="board">'
+        +'<div class="list-col'+(S.tab==='active'?' on':'')+'"><div class="board-col-title">Paused ('+active.length+')</div><div class="list">'+cardsHtmlFor(active,'active')+'</div></div>'
+        +'<div class="list-col'+(S.tab==='done'?' on':'')+'"><div class="board-col-title">Resumed ('+done.length+')</div><div class="list">'+cardsHtmlFor(done,'done')+'</div></div>'
+        +'<div class="list-col'+(S.tab==='archived'?' on':'')+'"><div class="board-col-title">Done ('+archived.length+')</div><div class="list">'+cardsHtmlFor(archived,'archived')+'</div></div>'
+      +'</div>';
   }
   else if(S.view==='pause'){
     const isEdit=!!S.editId;
