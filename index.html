@@ -168,14 +168,143 @@
   }
   .board-col-title{display:none;}
 
+  /* App shell: sidebar (desktop) + main content wrapper. On mobile this is
+     an invisible pass-through, identical layout to before the shell existed. */
+  .app-shell{display:flex;flex-direction:column;flex:1;min-height:0;width:100%;}
+  .main{display:flex;flex-direction:column;flex:1;min-height:0;width:100%;}
+  .sidebar{display:none;}
+
   @media (min-width:900px){
-    #up:has(.board){max-width:1080px;}
+    /* Mobile stays the simplified app; desktop gets the sidebar shell,
+       ambient glow, and full board, on every authenticated screen. */
+    #up:has(.sidebar){max-width:1240px;position:relative;}
+    #up:has(.sidebar):before{
+      content:'';
+      position:fixed;
+      top:-8%;
+      left:-6%;
+      width:46vw;
+      height:46vw;
+      max-width:680px;
+      max-height:680px;
+      background:radial-gradient(circle, rgba(0,200,215,0.12) 0%, rgba(0,200,215,0) 70%);
+      pointer-events:none;
+      z-index:0;
+    }
+
+    .app-shell{flex-direction:row;align-items:stretch;position:relative;z-index:1;}
+
+    .sidebar{
+      display:flex;
+      flex-direction:column;
+      width:250px;
+      flex-shrink:0;
+      padding:24px 16px;
+      background:linear-gradient(180deg, rgba(23,31,36,0.92), rgba(15,20,24,0.98));
+      border-right:1px solid rgba(0,200,215,0.14);
+      backdrop-filter:blur(20px);
+      -webkit-backdrop-filter:blur(20px);
+      min-height:100vh;
+      position:sticky;
+      top:0;
+      align-self:flex-start;
+    }
+    .sb-brand{display:flex;align-items:center;gap:10px;padding:6px 10px 28px;}
+    .sb-logo-mark{
+      width:36px;height:36px;
+      border-radius:11px;
+      overflow:hidden;
+      box-shadow:0 0 22px rgba(0,200,215,0.4);
+      flex-shrink:0;
+    }
+    .sb-logo-mark img{width:100%;height:100%;object-fit:cover;display:block;}
+    .sb-logo-text{font-size:19px;font-weight:800;letter-spacing:-0.02em;color:var(--tx);}
+    .sb-logo-text span{color:var(--ac);}
+
+    .sb-pause-btn{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      background:linear-gradient(135deg, var(--ac), #00A0AC);
+      color:#04222A;
+      border:none;
+      padding:13px 14px;
+      border-radius:14px;
+      font-size:14px;
+      font-weight:700;
+      cursor:pointer;
+      margin-bottom:26px;
+      box-shadow:0 8px 20px rgba(0,200,215,0.25);
+      transition:transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .sb-pause-btn:hover{transform:translateY(-1px);box-shadow:0 10px 26px rgba(0,200,215,0.35);}
+
+    .sb-nav{display:flex;flex-direction:column;gap:4px;flex:1;}
+    .sb-nav-item{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding:11px 12px;
+      border-radius:12px;
+      background:none;
+      border:none;
+      color:var(--tx2);
+      font-size:14px;
+      font-weight:600;
+      cursor:pointer;
+      text-align:left;
+      position:relative;
+      transition:background 0.15s ease, color 0.15s ease;
+    }
+    .sb-nav-item:hover{background:rgba(255,255,255,0.05);color:var(--tx);}
+    .sb-nav-item.on{background:var(--ac-dim);color:var(--ac);}
+    .sb-nav-item.on:before{
+      content:'';
+      position:absolute;
+      left:-16px;
+      top:50%;
+      transform:translateY(-50%);
+      width:3px;
+      height:18px;
+      border-radius:3px;
+      background:var(--ac);
+      box-shadow:0 0 10px rgba(0,200,215,0.6);
+    }
+    .sb-nav-icon{width:20px;text-align:center;font-size:15px;}
+
+    .sb-footer{border-top:1px solid rgba(255,255,255,0.08);padding-top:16px;margin-top:16px;}
+    .sb-user{font-size:12px;color:var(--tx2);padding:0 12px 10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .sb-logout{
+      width:100%;
+      background:transparent;
+      color:#E86B5C;
+      border:1px solid rgba(232,107,92,0.3);
+      padding:10px;
+      border-radius:12px;
+      font-size:13px;
+      font-weight:700;
+      cursor:pointer;
+      transition:background 0.15s ease;
+    }
+    .sb-logout:hover{background:rgba(232,107,92,0.08);}
+
+    .bottomnav,.fab{display:none;}
+
+    .topbar{
+      background:transparent;
+      border-bottom:1px solid rgba(255,255,255,0.06);
+      padding:20px 32px;
+    }
+    .screen{padding:24px 32px 60px;max-width:720px;}
+    .greet-wrap,.filter-chips-row{padding-left:32px;padding-right:32px;}
+
     .tabs{display:none;}
     .board{
       flex-direction:row;
       gap:20px;
       align-items:flex-start;
-      padding:0 20px;
+      padding:0 32px 40px;
     }
     .list-col{
       display:flex!important;
@@ -192,6 +321,8 @@
       margin-bottom:12px;
     }
     .list{padding:0 0 40px;}
+    .card{transition:transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;}
+    .card:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(0,0,0,0.35);}
   }
   .card{
     background:var(--card);
@@ -1209,9 +1340,11 @@ function draw(){
       +'</div>';
     return;
   }
+  let content='';
   if(S.view==='home'){
     if(S.loading){
-      el.innerHTML=topBar()+'<div class="loading">Loading your contexts…</div>';
+      content=topBar()+'<div class="loading">Loading your contexts…</div>';
+      el.innerHTML='<div class="app-shell">'+sidebarHtml()+'<div class="main">'+content+'</div></div>';
       return;
     }
     const byFilter=function(c){
@@ -1277,7 +1410,7 @@ function draw(){
         +'<button class="icon-btn" data-a="toggle-search" title="Close search">✕</button>'
       +'</div>')
       :'';
-    el.innerHTML=
+    content=
       topBar(true)
       +greetHtml
       +filterChip
@@ -1296,7 +1429,7 @@ function draw(){
   }
   else if(S.view==='pause'){
     const isEdit=!!S.editId;
-    el.innerHTML=
+    content=
       topBar()
       +'<div class="screen">'
         +'<button class="back-btn" data-a="go-home"><span class="back-arrow"></span>Back</button>'
@@ -1346,7 +1479,7 @@ function draw(){
         +'</div>';
     }
 
-    el.innerHTML=
+    content=
       topBar()
       +'<div class="screen">'
         +'<button class="back-btn" data-a="go-home"><span class="back-arrow"></span>Back</button>'
@@ -1448,7 +1581,7 @@ function draw(){
     }).join('');
     const tagEmptyHtmlS=tagListS.length===0?'<div class="proj-hint">No tags yet.</div>':'';
 
-    el.innerHTML=
+    content=
       topBar()
       +'<div class="screen">'
         +'<button class="back-btn" data-a="go-home"><span class="back-arrow"></span>Back</button>'
@@ -1532,7 +1665,7 @@ function draw(){
       +'</div>';
     }).join('');
     const tagEmptyHtml=tagList.length===0?'<div class="empty">No tags yet. Add some from the Pause form.</div>':'';
-    el.innerHTML=
+    content=
       topBar()
       +'<div class="screen">'
         +'<button class="back-btn" data-a="go-home"><span class="back-arrow"></span>Back</button>'
@@ -1566,7 +1699,7 @@ function draw(){
       }).join('');
       return '<div class="faq-section"><h4>'+e(sec.section)+'</h4>'+itemsHtml+'</div>';
     }).join('');
-    el.innerHTML=
+    content=
       topBar()
       +'<div class="screen">'
         +'<button class="back-btn" data-a="go-home"><span class="back-arrow"></span>Back</button>'
@@ -1575,11 +1708,12 @@ function draw(){
       +'</div>';
   }
   else if(S.view==='success'){
-    el.innerHTML=topBar()+'<div class="suc"><div class="sic">✓</div><div style="font-size:20px;font-weight:700;">Back in it!</div><div style="font-size:13px;color:var(--tx2)">Marked as resumed. Go get it.</div></div>';
+    content=topBar()+'<div class="suc"><div class="sic">✓</div><div style="font-size:20px;font-weight:700;">Back in it!</div><div style="font-size:13px;color:var(--tx2)">Marked as resumed. Go get it.</div></div>';
   }
-  el.innerHTML+=botNav();
-  el.innerHTML+=toastBanner();
-  el.innerHTML+=onboardingOverlay();
+  content+=botNav();
+  content+=toastBanner();
+  content+=onboardingOverlay();
+  el.innerHTML='<div class="app-shell">'+sidebarHtml()+'<div class="main">'+content+'</div></div>';
 }
 
 function toastBanner(){
@@ -1605,6 +1739,33 @@ function onboardingOverlay(){
       +(isLast?'':'<div class="onboard-skip" data-a="onboard-skip">Skip</div>')
     +'</div>'
   +'</div>';
+}
+
+// Desktop-only left sidebar (hidden via CSS under 900px). Reuses the exact
+// same data-a actions as botNav()/topBar(), just laid out differently, so
+// no new click handlers are needed. Rendered on every authenticated view.
+function sidebarHtml(){
+  const onHome=S.view==='home';
+  const onProjects=S.view==='projects';
+  const onSettings=S.view==='settings';
+  const onFaq=S.view==='faq';
+  const who=(S.profile.handle&&S.profile.handle.trim())
+    ? S.profile.handle
+    : (S.session&&S.session.user&&S.session.user.email ? S.session.user.email : '');
+  return '<aside class="sidebar">'
+    +'<div class="sb-brand"><div class="sb-logo-mark"><img src="./icons/icon-192.png" alt=""></div><div class="sb-logo-text">re<span>Pause</span></div></div>'
+    +'<button class="sb-pause-btn" data-a="go-pause"><span>⏸</span> Pause something</button>'
+    +'<nav class="sb-nav">'
+      +'<button class="sb-nav-item'+(onHome?' on':'')+'" data-a="go-home"><span class="sb-nav-icon emoji-mono">🏠</span>Home</button>'
+      +'<button class="sb-nav-item'+(onProjects?' on':'')+'" data-a="go-projects"><span class="sb-nav-icon emoji-mono">📁</span>Spaces</button>'
+      +'<button class="sb-nav-item'+(onSettings?' on':'')+'" data-a="go-settings"><span class="sb-nav-icon emoji-mono">⚙</span>Settings</button>'
+      +'<button class="sb-nav-item'+(onFaq?' on':'')+'" data-a="go-faq"><span class="sb-nav-icon emoji-mono">❓</span>FAQ</button>'
+    +'</nav>'
+    +'<div class="sb-footer">'
+      +(who?'<div class="sb-user">'+e(who)+'</div>':'')
+      +'<button class="sb-logout" data-a="logout">Log out</button>'
+    +'</div>'
+  +'</aside>';
 }
 
 function botNav(){
