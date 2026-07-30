@@ -168,58 +168,73 @@
   }
   .board-col-title{display:none;}
 
-  /* App shell: sidebar (desktop) + main content wrapper. On mobile this is
+  /* App shell: top nav (desktop) + main content wrapper. On mobile this is
      an invisible pass-through, identical layout to before the shell existed. */
   .app-shell{display:flex;flex-direction:column;flex:1;min-height:0;width:100%;}
   .main{display:flex;flex-direction:column;flex:1;min-height:0;width:100%;}
-  .sidebar{display:none;}
+  .topnav{display:none;}
+  .app-footer{display:none;}
 
   @media (min-width:900px){
-    /* Mobile stays the simplified app; desktop gets the sidebar shell,
+    /* Mobile stays the simplified app; desktop gets the top-nav shell,
        ambient glow, and full board, on every authenticated screen. */
-    #up:has(.sidebar){max-width:1240px;position:relative;}
-    #up:has(.sidebar):before{
+    #up:has(.topnav){max-width:1240px;position:relative;}
+    #up:has(.topnav):before{
       content:'';
       position:fixed;
-      top:-8%;
-      left:-6%;
-      width:46vw;
-      height:46vw;
-      max-width:680px;
-      max-height:680px;
-      background:radial-gradient(circle, rgba(0,200,215,0.12) 0%, rgba(0,200,215,0) 70%);
+      top:-16%;
+      left:50%;
+      transform:translateX(-50%);
+      width:64vw;
+      height:38vw;
+      max-width:920px;
+      max-height:560px;
+      background:radial-gradient(ellipse, rgba(0,200,215,0.11) 0%, rgba(0,200,215,0) 70%);
       pointer-events:none;
       z-index:0;
     }
 
-    .app-shell{flex-direction:row;align-items:stretch;position:relative;z-index:1;}
+    .app-shell{position:relative;z-index:1;}
 
-    .sidebar{
+    /* Top nav: logo row, then the nav menu directly below it, same glass/
+       glow aesthetic as before, just reflowed horizontal instead of a
+       left sidebar (explicit product call from Azwan after seeing v1). */
+    .topnav{
       display:flex;
       flex-direction:column;
-      width:250px;
-      flex-shrink:0;
-      padding:24px 16px;
-      background:linear-gradient(180deg, rgba(23,31,36,0.92), rgba(15,20,24,0.98));
-      border-right:1px solid rgba(0,200,215,0.14);
+      gap:2px;
+      padding:18px 32px 0;
+      background:linear-gradient(180deg, rgba(23,31,36,0.9), rgba(15,20,24,0.75));
+      border-bottom:1px solid rgba(0,200,215,0.14);
       backdrop-filter:blur(20px);
       -webkit-backdrop-filter:blur(20px);
-      min-height:100vh;
       position:sticky;
       top:0;
-      align-self:flex-start;
+      z-index:10;
     }
-    .sb-brand{display:flex;align-items:center;gap:10px;padding:6px 10px 28px;}
+    .tn-top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      padding-bottom:16px;
+    }
+    .tn-right{display:flex;align-items:center;gap:12px;}
+    .tn-nav{display:flex;align-items:center;gap:4px;overflow-x:auto;}
+
+    .sb-brand{display:flex;align-items:center;gap:10px;}
     .sb-logo-mark{
-      width:36px;height:36px;
-      border-radius:11px;
+      width:34px;height:34px;
+      border-radius:10px;
       overflow:hidden;
       box-shadow:0 0 22px rgba(0,200,215,0.4);
       flex-shrink:0;
     }
     .sb-logo-mark img{width:100%;height:100%;object-fit:cover;display:block;}
-    .sb-logo-text{font-size:19px;font-weight:800;letter-spacing:-0.02em;color:var(--tx);}
+    .sb-logo-text{font-size:18px;font-weight:800;letter-spacing:-0.02em;color:var(--tx);}
     .sb-logo-text span{color:var(--ac);}
+
+    .sb-user{font-size:12px;color:var(--tx2);white-space:nowrap;}
 
     .sb-pause-btn{
       display:flex;
@@ -229,65 +244,61 @@
       background:linear-gradient(135deg, var(--ac), #00A0AC);
       color:#04222A;
       border:none;
-      padding:13px 14px;
-      border-radius:14px;
-      font-size:14px;
+      padding:10px 16px;
+      border-radius:12px;
+      font-size:13px;
       font-weight:700;
       cursor:pointer;
-      margin-bottom:26px;
+      white-space:nowrap;
       box-shadow:0 8px 20px rgba(0,200,215,0.25);
       transition:transform 0.15s ease, box-shadow 0.15s ease;
     }
     .sb-pause-btn:hover{transform:translateY(-1px);box-shadow:0 10px 26px rgba(0,200,215,0.35);}
 
-    .sb-nav{display:flex;flex-direction:column;gap:4px;flex:1;}
+    .sb-logout{
+      background:transparent;
+      color:#E86B5C;
+      border:1px solid rgba(232,107,92,0.3);
+      padding:9px 14px;
+      border-radius:12px;
+      font-size:13px;
+      font-weight:700;
+      cursor:pointer;
+      white-space:nowrap;
+      transition:background 0.15s ease;
+    }
+    .sb-logout:hover{background:rgba(232,107,92,0.08);}
+
     .sb-nav-item{
       display:flex;
       align-items:center;
-      gap:12px;
-      padding:11px 12px;
-      border-radius:12px;
+      gap:8px;
+      padding:11px 16px;
+      border-radius:10px 10px 0 0;
       background:none;
       border:none;
       color:var(--tx2);
       font-size:14px;
       font-weight:600;
       cursor:pointer;
-      text-align:left;
+      white-space:nowrap;
       position:relative;
       transition:background 0.15s ease, color 0.15s ease;
     }
     .sb-nav-item:hover{background:rgba(255,255,255,0.05);color:var(--tx);}
-    .sb-nav-item.on{background:var(--ac-dim);color:var(--ac);}
+    .sb-nav-item.on{color:var(--ac);}
     .sb-nav-item.on:before{
       content:'';
       position:absolute;
-      left:-16px;
-      top:50%;
-      transform:translateY(-50%);
-      width:3px;
-      height:18px;
-      border-radius:3px;
+      left:14px;
+      right:14px;
+      bottom:0;
+      height:2px;
+      border-radius:2px;
       background:var(--ac);
       box-shadow:0 0 10px rgba(0,200,215,0.6);
     }
-    .sb-nav-icon{width:20px;text-align:center;font-size:15px;}
-
-    .sb-footer{border-top:1px solid rgba(255,255,255,0.08);padding-top:16px;margin-top:16px;}
-    .sb-user{font-size:12px;color:var(--tx2);padding:0 12px 10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-    .sb-logout{
-      width:100%;
-      background:transparent;
-      color:#E86B5C;
-      border:1px solid rgba(232,107,92,0.3);
-      padding:10px;
-      border-radius:12px;
-      font-size:13px;
-      font-weight:700;
-      cursor:pointer;
-      transition:background 0.15s ease;
-    }
-    .sb-logout:hover{background:rgba(232,107,92,0.08);}
+    .sb-nav-icon{font-size:15px;}
 
     .bottomnav,.fab{display:none;}
 
@@ -308,6 +319,7 @@
     }
     .list-col{
       display:flex!important;
+      flex-direction:column;
       flex:1;
       min-width:0;
     }
@@ -323,6 +335,29 @@
     .list{padding:0 0 40px;}
     .card{transition:transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;}
     .card:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(0,0,0,0.35);}
+
+    /* Footer: replaces the (hidden) mobile bottom nav on desktop. */
+    .app-footer{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      flex-wrap:wrap;
+      padding:20px 32px;
+      margin-top:24px;
+      border-top:1px solid rgba(255,255,255,0.06);
+      font-size:12px;
+      color:var(--tx2);
+    }
+    .footer-contact{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      color:var(--ac);
+      font-weight:600;
+      text-decoration:none;
+    }
+    .footer-contact:hover{text-decoration:underline;}
   }
   .card{
     background:var(--card);
@@ -1344,7 +1379,7 @@ function draw(){
   if(S.view==='home'){
     if(S.loading){
       content=topBar()+'<div class="loading">Loading your contexts…</div>';
-      el.innerHTML='<div class="app-shell">'+sidebarHtml()+'<div class="main">'+content+'</div></div>';
+      el.innerHTML='<div class="app-shell">'+topNavHtml()+'<div class="main">'+content+footerHtml()+'</div></div>';
       return;
     }
     const byFilter=function(c){
@@ -1710,10 +1745,11 @@ function draw(){
   else if(S.view==='success'){
     content=topBar()+'<div class="suc"><div class="sic">✓</div><div style="font-size:20px;font-weight:700;">Back in it!</div><div style="font-size:13px;color:var(--tx2)">Marked as resumed. Go get it.</div></div>';
   }
+  content+=footerHtml();
   content+=botNav();
   content+=toastBanner();
   content+=onboardingOverlay();
-  el.innerHTML='<div class="app-shell">'+sidebarHtml()+'<div class="main">'+content+'</div></div>';
+  el.innerHTML='<div class="app-shell">'+topNavHtml()+'<div class="main">'+content+'</div></div>';
 }
 
 function toastBanner(){
@@ -1741,10 +1777,11 @@ function onboardingOverlay(){
   +'</div>';
 }
 
-// Desktop-only left sidebar (hidden via CSS under 900px). Reuses the exact
-// same data-a actions as botNav()/topBar(), just laid out differently, so
-// no new click handlers are needed. Rendered on every authenticated view.
-function sidebarHtml(){
+// Desktop-only top nav (hidden via CSS under 900px): logo row, then the
+// nav menu directly below it. Reuses the exact same data-a actions as
+// botNav()/topBar(), just laid out differently, so no new click handlers
+// are needed. Rendered on every authenticated view.
+function topNavHtml(){
   const onHome=S.view==='home';
   const onProjects=S.view==='projects';
   const onSettings=S.view==='settings';
@@ -1752,20 +1789,31 @@ function sidebarHtml(){
   const who=(S.profile.handle&&S.profile.handle.trim())
     ? S.profile.handle
     : (S.session&&S.session.user&&S.session.user.email ? S.session.user.email : '');
-  return '<aside class="sidebar">'
-    +'<div class="sb-brand"><div class="sb-logo-mark"><img src="./icons/icon-192.png" alt=""></div><div class="sb-logo-text">re<span>Pause</span></div></div>'
-    +'<button class="sb-pause-btn" data-a="go-pause"><span>⏸</span> Pause something</button>'
-    +'<nav class="sb-nav">'
+  return '<header class="topnav">'
+    +'<div class="tn-top">'
+      +'<div class="sb-brand"><div class="sb-logo-mark"><img src="./icons/icon-192.png" alt=""></div><div class="sb-logo-text">re<span>Pause</span></div></div>'
+      +'<div class="tn-right">'
+        +(who?'<span class="sb-user">'+e(who)+'</span>':'')
+        +'<button class="sb-pause-btn" data-a="go-pause"><span>⏸</span> Pause something</button>'
+        +'<button class="sb-logout" data-a="logout">Log out</button>'
+      +'</div>'
+    +'</div>'
+    +'<nav class="tn-nav">'
       +'<button class="sb-nav-item'+(onHome?' on':'')+'" data-a="go-home"><span class="sb-nav-icon emoji-mono">🏠</span>Home</button>'
       +'<button class="sb-nav-item'+(onProjects?' on':'')+'" data-a="go-projects"><span class="sb-nav-icon emoji-mono">📁</span>Spaces</button>'
       +'<button class="sb-nav-item'+(onSettings?' on':'')+'" data-a="go-settings"><span class="sb-nav-icon emoji-mono">⚙</span>Settings</button>'
       +'<button class="sb-nav-item'+(onFaq?' on':'')+'" data-a="go-faq"><span class="sb-nav-icon emoji-mono">❓</span>FAQ</button>'
     +'</nav>'
-    +'<div class="sb-footer">'
-      +(who?'<div class="sb-user">'+e(who)+'</div>':'')
-      +'<button class="sb-logout" data-a="logout">Log out</button>'
-    +'</div>'
-  +'</aside>';
+  +'</header>';
+}
+
+// Desktop-only footer (hidden via CSS under 900px): replaces the (hidden)
+// mobile bottom nav's screen real estate with contact + copyright.
+function footerHtml(){
+  return '<footer class="app-footer">'
+    +'<a class="footer-contact" href="https://wa.me/60166490969" target="_blank" rel="noopener noreferrer">💬 Contact us</a>'
+    +'<div>Copyright © 2026 Creative Mojo. All Rights Reserved.</div>'
+  +'</footer>';
 }
 
 function botNav(){
